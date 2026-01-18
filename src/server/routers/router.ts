@@ -1,4 +1,4 @@
-import { router, publicProcedure } from "./trpc";
+import { router, publicProcedure } from "../trpc";
 import { z } from "zod";
 
 export const appRouter = router({
@@ -20,5 +20,6 @@ export const appRouter = router({
     return { value: Math.floor(Math.random() * 100) };
   }),
 });
+
 
 export type AppRouter = typeof appRouter;

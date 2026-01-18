@@ -20,9 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${space.variable} antialiased`}
-      >
+      <body className={`${space.variable} antialiased bg-white min-h-screen`}>
         <Provider>{children}</Provider>
       </body>
     </html>

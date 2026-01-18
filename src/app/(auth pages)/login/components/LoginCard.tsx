@@ -6,7 +6,7 @@ const LoginCard = () => {
     <div className="w-full max-w-md rounded-xl bg-white shadow-2xl overflow-hidden">
       <div className="px-8 pt-8 text-center">
         <h1 className="text-xl font-semibold text-gray-900">
-          Sign in to AI Short Generator
+          Sign in to ClipGen, AI Short Generator
         </h1>
         <p className="mt-2 text-sm text-gray-500">
           Welcome back! Please sign in to continue

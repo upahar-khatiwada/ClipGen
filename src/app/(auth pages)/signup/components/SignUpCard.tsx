@@ -8,7 +8,7 @@ const SignUpCard = () => {
           Create your account
         </h1>
         <p className="mt-2 text-sm text-gray-500">
-          Join AI Short Generator and start creating shorts in seconds
+          Join Sign in to ClipGen, An AI Short Generator and start creating shorts in seconds
         </p>
       </div>
 
