@@ -1,6 +1,8 @@
 "use client";
 
+import { trpc } from "@/src/app/_trpc/client";
 import InputField from "@/src/components/InputField";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
 type SignUpFormValues = {
@@ -10,14 +12,26 @@ type SignUpFormValues = {
 };
 
 const SignUpForm = () => {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<SignUpFormValues>();
 
+  const signup = trpc.auth.signup.useMutation({
+    onSuccess: (res) => {
+      if (res.status === "success") {
+        router.push("/login");
+      }
+    },
+  });
+
   const onSubmit = (data: SignUpFormValues) => {
     console.log("Signup Data:", data);
+
+    signup.mutateAsync(data);
   };
 
   return (

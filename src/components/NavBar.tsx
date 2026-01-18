@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 const NavBar = () => {
   return (
-    <div className="flex px-3 bg-white py-4 shadow-xl font-bold backdrop-blur-md items-center justify-between">
+    <div className="flex px-3 bg-white py-4 h-15 shadow-xl font-bold backdrop-blur-md items-center justify-between">
       <motion.div
         whileHover={{ scale: 1.05 }}
         className="flex items-center gap-2 text-xl cursor-pointer"

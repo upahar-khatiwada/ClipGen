@@ -9,7 +9,7 @@ const LoginCard = () => {
           Sign in to ClipGen, AI Short Generator
         </h1>
         <p className="mt-2 text-sm text-gray-500">
-          Welcome back! Please sign in to continue
+          Please sign in to continue
         </p>
       </div>
 

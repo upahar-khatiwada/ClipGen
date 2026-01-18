@@ -2,6 +2,8 @@
 
 import { useForm } from "react-hook-form";
 import InputField from "@/src/components/InputField";
+import { trpc } from "@/src/app/_trpc/client";
+import { useRouter } from "next/navigation";
 
 type LoginFormValues = {
   email: string;
@@ -15,8 +17,22 @@ export default function LoginForm() {
     formState: { errors },
   } = useForm<LoginFormValues>();
 
+  const router = useRouter();
+
+  const login = trpc.auth.login.useMutation({
+    onSuccess: (res) => {
+      if (res.status === "success") {
+        router.push("/dashboard");
+      } else if (res.status === "error") {
+        alert(res.message);
+      }
+    },
+  });
+
   const onSubmit = (data: LoginFormValues) => {
     console.log(data);
+
+    login.mutateAsync(data);
   };
 
   return (

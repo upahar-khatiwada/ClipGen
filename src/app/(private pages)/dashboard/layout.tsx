@@ -5,7 +5,7 @@ export const metadata: Metadata = {
 };
 
 const LayoutPage = ({ children }: { children: React.ReactNode }) => {
-  return <main className="bg-white min-h-screen text-black">{children}</main>;
+  return <main className="bg-white  text-black">{children}</main>;
 };
 
 export default LayoutPage;
