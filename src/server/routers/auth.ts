@@ -26,10 +26,24 @@ export const authRouter = router({
       });
 
       if (existingUser) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "User already exists!",
-        });
+        if (existingUser.emailVerifiedAt) {
+          await sendEmail({
+            email: existingUser.email,
+            emailType: "VERIFY",
+            userId: existingUser.id,
+          });
+
+          return {
+            status: "success",
+            message:
+              "A verification email was resent. Check your inbox or spam folder.",
+          };
+        } else {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "User already exists!",
+          });
+        }
       }
 
       const hashedPassword = await hashPassword(password);
@@ -128,6 +142,47 @@ export const authRouter = router({
       };
     }),
 
+  verifyEmail: publicProcedure
+    .input(z.object({ token: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const { token } = input;
+
+      const user = await ctx.prisma.user.findFirst({
+        where: {
+          verifyToken: token,
+          verifyTokenExpiry: { gt: new Date(Date.now()) },
+        },
+      });
+
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User Not Found" });
+      }
+
+      if (user.emailVerifiedAt) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "User already verified!",
+        });
+      }
+
+      await ctx.prisma.user.update({
+        where: {
+          id: user.id,
+          verifyToken: token,
+        },
+        data: {
+          emailVerifiedAt: new Date(Date.now()),
+          verifyToken: null,
+          verifyTokenExpiry: null,
+        },
+      });
+
+      return {
+        status: "success",
+        message: "User verified successfully",
+      };
+    }),
+
   resendVerificationEmail: publicProcedure
     .input(z.object({ email: z.string() }))
     .mutation(async ({ input, ctx }) => {
@@ -162,27 +217,27 @@ export const authRouter = router({
       }
     }),
 
-  verify: publicProcedure.query(async ({ ctx }) => {
-    const cookieStore = await cookies();
-    const refreshToken = cookieStore.get("refreshToken")?.value;
+  // verify: publicProcedure.query(async ({ ctx }) => {
+  //   const cookieStore = await cookies();
+  //   const refreshToken = cookieStore.get("refreshToken")?.value;
 
-    if (!refreshToken) {
-      return { status: "error", message: "No refresh token found" };
-    }
+  //   if (!refreshToken) {
+  //     return { status: "error", message: "No refresh token found" };
+  //   }
 
-    const redisKey = `refresh_token:${refreshToken}`;
-    const data = await ctx.redis.get(redisKey);
+  //   const redisKey = `refresh_token:${refreshToken}`;
+  //   const data = await ctx.redis.get(redisKey);
 
-    if (!data) {
-      return { status: "error", message: "Token expired or invalid" };
-    }
+  //   if (!data) {
+  //     return { status: "error", message: "Token expired or invalid" };
+  //   }
 
-    const { userId, accessToken } = JSON.parse(data);
+  //   const { userId, accessToken } = JSON.parse(data);
 
-    return {
-      status: "success",
-      userId,
-      accessToken,
-    };
-  }),
+  //   return {
+  //     status: "success",
+  //     userId,
+  //     accessToken,
+  //   };
+  // }),
 });
