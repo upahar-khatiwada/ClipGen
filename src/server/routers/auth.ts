@@ -6,8 +6,10 @@ import {
   createRefreshToken,
 } from "@/src/utils/token_generators";
 import { cookies } from "next/headers";
+import { sendEmail } from "@/src/utils/mailer";
+import { TRPCError } from "@trpc/server";
 
-export const userRouter = router({
+export const authRouter = router({
   signup: publicProcedure
     .input(
       z.object({
@@ -23,16 +25,17 @@ export const userRouter = router({
         where: { email },
       });
 
-      console.log(existingUser);
-
       if (existingUser) {
-        return { status: "error", message: "User already exists!" };
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "User already exists!",
+        });
       }
 
       const hashedPassword = await hashPassword(password);
 
-      await ctx.prisma.$transaction(async (tx) => {
-        const user = await tx.user.create({
+      const user = await ctx.prisma.$transaction(async (tx) => {
+        const userSigningUp = await tx.user.create({
           data: {
             name: username,
             email: email,
@@ -43,13 +46,25 @@ export const userRouter = router({
         await tx.account.create({
           data: {
             provider: "email",
-            userId: user.id,
-            providerAccountId: user.email,
+            userId: userSigningUp.id,
+            providerAccountId: userSigningUp.email,
           },
         });
+
+        return userSigningUp;
       });
 
-      return { status: "success", message: "User successfully created!" };
+      await sendEmail({
+        email: user.email,
+        emailType: "VERIFY",
+        userId: user.id,
+      });
+
+      return {
+        status: "success",
+        message:
+          "Check your email to verify your account. You might also need to check your spam folder.",
+      };
     }),
 
   login: publicProcedure
@@ -77,8 +92,13 @@ export const userRouter = router({
       const refreshToken = createRefreshToken(existingUser.id);
 
       await ctx.redis.set(
-        `refresh_token: ${refreshToken}`,
-        `user_id: ${existingUser.id}`,
+        `refresh_token:${refreshToken}`,
+        JSON.stringify({
+          userId: existingUser.id,
+          accessToken,
+        }),
+        "EX",
+        7 * 24 * 60 * 60,
       );
 
       await ctx.prisma.account.update({
@@ -107,4 +127,62 @@ export const userRouter = router({
         message: "Successfully logged in",
       };
     }),
+
+  resendVerificationEmail: publicProcedure
+    .input(z.object({ email: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const { email } = input;
+
+      const user = await ctx.prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (!user) {
+        return { status: "error", message: "User not found" };
+      }
+
+      if (user.emailVerifiedAt && user.emailVerifiedAt.getTime() < Date.now()) {
+        return { status: "error", message: "Email is already verified." };
+      }
+
+      try {
+        await sendEmail({
+          email: user.email,
+          emailType: "VERIFY",
+          userId: user.id,
+        });
+
+        return { status: "success", message: "Verification email sent." };
+      } catch (err) {
+        console.error("Error while resending email:", err);
+        return {
+          status: "error",
+          message: "Unable to send verification email. Please try again later.",
+        };
+      }
+    }),
+
+  verify: publicProcedure.query(async ({ ctx }) => {
+    const cookieStore = await cookies();
+    const refreshToken = cookieStore.get("refreshToken")?.value;
+
+    if (!refreshToken) {
+      return { status: "error", message: "No refresh token found" };
+    }
+
+    const redisKey = `refresh_token:${refreshToken}`;
+    const data = await ctx.redis.get(redisKey);
+
+    if (!data) {
+      return { status: "error", message: "Token expired or invalid" };
+    }
+
+    const { userId, accessToken } = JSON.parse(data);
+
+    return {
+      status: "success",
+      userId,
+      accessToken,
+    };
+  }),
 });

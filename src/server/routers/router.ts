@@ -1,6 +1,6 @@
 import { router, publicProcedure } from "../trpc";
 import { z } from "zod";
-import { userRouter } from "./auth";
+import { authRouter } from "./auth";
 
 export const appRouter = router({
   hello: publicProcedure.query(() => ({ greeting: "Hello tRPC" })),
@@ -21,7 +21,7 @@ export const appRouter = router({
     return { value: Math.floor(Math.random() * 100) };
   }),
 
-  auth: userRouter,
+  auth: authRouter,
 });
 
 export type AppRouter = typeof appRouter;
