@@ -9,7 +9,12 @@ const UpgradePage = () => {
     "monthly",
   );
 
-  const creditsOptions = [50, 100, 200, 500];
+  const creditsOptions = [
+    { credits: 50, price: 5 },
+    { credits: 100, price: 10 },
+    { credits: 200, price: 18 },
+    { credits: 500, price: 40 },
+  ];
 
   const handleBuyCredits = () => {};
 
@@ -27,21 +32,29 @@ const UpgradePage = () => {
 
         <section className="bg-white p-6 rounded-2xl shadow-md">
           <h2 className="text-2xl font-bold mb-4">Buy Credits</h2>
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <select
-              className="border rounded-xl p-3 bg-white cursor-pointer flex-1"
-              value={selectedCredits}
-              onChange={(e) => setSelectedCredits(Number(e.target.value))}
-            >
-              {creditsOptions.map((c) => (
-                <option key={c} value={c}>
-                  {c} Credits
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {creditsOptions.map((option) => (
+              <div
+                key={option.credits}
+                onClick={() => setSelectedCredits(option.credits)}
+                className={`cursor-pointer rounded-xl p-4 border transition-all duration-200 flex flex-col items-center justify-center text-center ${
+                  selectedCredits === option.credits
+                    ? "border-indigo-600 bg-indigo-50 shadow-lg"
+                    : "border-gray-200 hover:border-indigo-400 hover:bg-indigo-50/30"
+                }`}
+              >
+                <p className="text-lg font-semibold">
+                  {option.credits} Credits
+                </p>
+                <p className="text-sm text-slate-500">${option.price}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 w-full text-right">
             <button
               onClick={handleBuyCredits}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition duration-200 cursor-pointer"
+              className="px-6 py-3 w-full bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition duration-200 cursor-pointer"
             >
               Buy Now
             </button>
@@ -66,10 +79,10 @@ const UpgradePage = () => {
             />
           </div>
 
-          <div className="mt-6 text-right">
+          <div className="mt-6 w-full text-right">
             <button
               onClick={handleBuySubscription}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition duration-200 cursor-pointer"
+              className="px-6 py-3 w-full bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition duration-200 cursor-pointer"
             >
               Subscribe
             </button>

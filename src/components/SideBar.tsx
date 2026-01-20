@@ -19,7 +19,7 @@ const SideBar = () => {
   const pathname = usePathname();
 
   return (
-    <div className="w-64 bg-slate-50 shadow-md h-[calc(100vh-72px)]">
+    <div className="w-64 mt-3 bg-slate-50 shadow-md h-[calc(100vh-72px)]">
       <div className="flex flex-col mt-0">
         {sidebarItems.map((item) => {
           const isActive = pathname === item.href;
