@@ -1,11 +1,15 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Plus, Shield, User } from "lucide-react";
+import { Home, LayoutTemplate, Shield, User } from "lucide-react";
 
 const sidebarItems = [
   { name: "Dashboard", icon: <Home className="w-5 h-5" />, href: "/dashboard" },
-  { name: "Create New", icon: <Plus className="w-5 h-5" />, href: "/create" },
+  {
+    name: "Templates",
+    icon: <LayoutTemplate className="w-5 h-5" />,
+    href: "/templates",
+  },
   { name: "Upgrade", icon: <Shield className="w-5 h-5" />, href: "/upgrade" },
   { name: "Account", icon: <User className="w-5 h-5" />, href: "/account" },
 ];
@@ -15,7 +19,7 @@ const SideBar = () => {
   const pathname = usePathname();
 
   return (
-    <div className="w-64 bg-white shadow-md h-[calc(100vh-72px)]">
+    <div className="w-64 bg-slate-50 shadow-md h-[calc(100vh-72px)]">
       <div className="flex flex-col mt-0">
         {sidebarItems.map((item) => {
           const isActive = pathname === item.href;
