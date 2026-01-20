@@ -94,7 +94,7 @@ const AccountPage = () => {
               {pastVideos.map((video) => (
                 <div
                   key={video.id}
-                  className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition"
+                  className="bg-white rounded-2xl shadow-md hover:shadow-xl hover:scale-110 transition duration-200 cursor-pointer"
                 >
                   <div className="aspect-video bg-slate-200">
                     <Image
