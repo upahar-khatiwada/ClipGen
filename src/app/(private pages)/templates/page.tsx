@@ -1,8 +1,8 @@
 "use client";
 
 import { LayoutTemplate, Sparkles, Timer } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
+import StyleCard from "./components/StyleCard";
 
 const styles = [
   { id: "realistic", label: "Realistic", img: "/templates/realistic.webp" },
@@ -14,6 +14,7 @@ const contentTypes = ["Motivation", "Did You Know", "Story", "Podcast"];
 const durations = ["15s", "30s", "60s"];
 
 const TemplatesPage = () => {
+  const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [selectedContent, setSelectedContent] = useState<string>(
     contentTypes[0],
   );
@@ -62,22 +63,14 @@ const TemplatesPage = () => {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
             {styles.map((style) => (
-              <button
+              <StyleCard
                 key={style.id}
-                onClick={() => {}}
-                className="group relative rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition"
-              >
-                <Image
-                  src={style.img}
-                  alt={style.label}
-                  className="w-full object-cover group-hover:scale-105 transition duration-150 cursor-pointer"
-                  width={40}
-                  height={90}
-                />
-                <div className="absolute bottom-0 w-full bg-black/80 text-white text-center py-2 text-sm font-semibold">
-                  {style.label}
-                </div>
-              </button>
+                id={style.id}
+                label={style.label}
+                img={style.img}
+                selected={selectedStyle === style.id}
+                onClick={() => setSelectedStyle(style.id)}
+              />
             ))}
           </div>
         </section>

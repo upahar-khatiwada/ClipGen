@@ -1,11 +1,12 @@
 import { Metadata } from "next";
+import React from "react";
 
 export const metadata: Metadata = {
-  title: "Dashboard | ClipGen",
+  title: "Templates | ClipGen",
 };
 
 const LayoutPage = ({ children }: { children: React.ReactNode }) => {
-  return <main className="bg-white  text-black">{children}</main>;
+  return <main>{children}</main>;
 };
 
 export default LayoutPage;
