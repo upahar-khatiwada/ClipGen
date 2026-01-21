@@ -50,3 +50,39 @@ model Account {
 
   @@unique([provider, providerAccountId])
 }
+
+// schemas for templates page
+model ContentType {
+  id   String @id @default(cuid())
+  name String @unique
+
+  templates Template[]
+}
+
+model Style {
+  id       String @id @default(cuid())
+  name     String
+  imageUrl String
+
+  templates Template[]
+}
+
+model Duration {
+  id      String @id @default(cuid())
+  label   String
+  seconds Int
+
+  templates Template[]
+}
+
+model Template {
+  id String @id @default(cuid())
+
+  contentTypeId String
+  styleId       String
+  durationId    String
+
+  contentType ContentType @relation(fields: [contentTypeId], references: [id])
+  style       Style       @relation(fields: [styleId], references: [id])
+  duration    Duration    @relation(fields: [durationId], references: [id])
+}
