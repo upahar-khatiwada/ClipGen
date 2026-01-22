@@ -6,7 +6,7 @@ import {
   createRefreshToken,
 } from "@/src/utils/token_generators";
 import { cookies } from "next/headers";
-import { sendEmail } from "@/src/utils/mailer";
+import { sendEmail } from "@/src/services/sendgrid_mailer";
 import { TRPCError } from "@trpc/server";
 
 export const authRouter = router({

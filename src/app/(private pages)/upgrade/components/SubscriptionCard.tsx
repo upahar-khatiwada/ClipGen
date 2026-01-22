@@ -3,7 +3,7 @@ interface SubscriptionCardProps {
   price: string;
   selected: boolean;
   onSelect: () => void;
-  description?: string;
+  description?: string[];
 }
 
 const SubscriptionCard = ({
@@ -22,7 +22,13 @@ const SubscriptionCard = ({
       <div>
         <h3 className="text-xl font-semibold mb-2">{title}</h3>
         <p className="text-slate-500 mb-4">{price}</p>
-        {description && <p className="text-slate-400 text-sm">{description}</p>}
+        {description && (
+          <ul className="text-slate-400 text-sm list-disc list-inside space-y-1">
+            {description.map((perk, i) => (
+              <li key={i}>{perk}</li>
+            ))}
+          </ul>
+        )}
       </div>
       <button
         onClick={onSelect}

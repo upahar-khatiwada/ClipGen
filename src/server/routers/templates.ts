@@ -1,16 +1,15 @@
-import prisma from "@/src/lib/prisma";
 import { router, privateProcedure } from "../trpc";
 
 export const templatesRouter = router({
-  getContentTypes: privateProcedure.query(() => {
-    return prisma.contentType.findMany();
+  getContentTypes: privateProcedure.query(({ ctx }) => {
+    return ctx.prisma.contentType.findMany();
   }),
 
-  getStyles: privateProcedure.query(() => {
-    return prisma.style.findMany();
+  getStyles: privateProcedure.query(({ ctx }) => {
+    return ctx.prisma.style.findMany();
   }),
 
-  getDuration: privateProcedure.query(() => {
-    return prisma.duration.findMany();
+  getDuration: privateProcedure.query(({ ctx }) => {
+    return ctx.prisma.duration.findMany();
   }),
 });
