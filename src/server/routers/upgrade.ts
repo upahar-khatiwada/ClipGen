@@ -11,6 +11,9 @@ export const upgradeRouer = router({
   getSubscriptionDetails: privateProcedure.query(({ ctx }) => {
     return ctx.prisma.subscriptionPlan.findMany({
       where: { active: true },
+      orderBy: {
+        priceUsd: "asc",
+      },
     });
   }),
 });

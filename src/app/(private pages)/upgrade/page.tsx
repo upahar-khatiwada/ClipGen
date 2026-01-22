@@ -10,11 +10,10 @@ const UpgradePage = () => {
   const [selectedCredits, setSelectedCredits] = useState<number | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
-  const { data: creditPacksData, isLoading: credisPacksLoading } =
-    trpc.upgrade.getCreditDetails.useQuery();
-
-  const { data: subscriptionsData, isLoading: subscriptionsLoading } =
-    trpc.upgrade.getSubscriptionDetails.useQuery();
+  const [creditPacks, subscriptions] = trpc.useQueries((t) => [
+    t.upgrade.getCreditDetails(),
+    t.upgrade.getSubscriptionDetails(),
+  ]);
 
   const handleBuyCredits = () => {};
 
@@ -33,11 +32,11 @@ const UpgradePage = () => {
         <section className="bg-white p-6 rounded-2xl shadow-md">
           <h2 className="text-2xl font-bold mb-4">Buy Credits</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {credisPacksLoading
+            {creditPacks.isLoading
               ? Array.from({ length: 8 }).map((_, i) => {
                   return <CreditPacksSkeleton key={i} />;
                 })
-              : creditPacksData?.map((creditPack) => (
+              : creditPacks.data?.map((creditPack) => (
                   <div
                     key={creditPack.credits}
                     onClick={() => setSelectedCredits(creditPack.credits)}
@@ -71,11 +70,11 @@ const UpgradePage = () => {
         <section className="bg-white p-6 rounded-2xl shadow-md">
           <h2 className="text-2xl font-bold mb-4">Subscription Plans</h2>
           <div className="flex flex-col md:flex-row gap-6">
-            {subscriptionsLoading
+            {subscriptions.isLoading
               ? Array.from({ length: 2 }).map((_, i) => (
                   <SubscriptionCardSkeleton key={i} />
                 ))
-              : subscriptionsData?.map((plan) => (
+              : subscriptions.data?.map((plan) => (
                   <SubscriptionCard
                     key={plan.id}
                     title={plan.name}
@@ -91,7 +90,7 @@ const UpgradePage = () => {
 
           <div className="mt-6 w-full text-right">
             <button
-            disabled={selectedPlan === null}
+              disabled={selectedPlan === null}
               onClick={handleBuySubscription}
               className="px-6 py-3 w-full disabled:bg-gray-400 disabled:cursor-not-allowed bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition duration-200 cursor-pointer"
             >

@@ -12,18 +12,16 @@ const TemplatesPage = () => {
   const [selectedContent, setSelectedContent] = useState<string | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<string | null>(null);
 
-  const { data: contentTypes, isLoading: contentTypesLoading } =
-    trpc.templates.getContentTypes.useQuery();
+  const [contentTypes, styles, durations] = trpc.useQueries((t) => [
+    t.templates.getContentTypes(),
+    t.templates.getStyles(),
+    t.templates.getDuration(),
+  ]);
 
-  const { data: styles, isLoading: stylesLoading } =
-    trpc.templates.getStyles.useQuery();
+  const effectiveContentTypeId =
+    selectedContent ?? contentTypes.data?.[0]?.id ?? "";
 
-  const { data: durations, isLoading: durationsLoading } =
-    trpc.templates.getDuration.useQuery();
-
-  const effectiveContentTypeId = selectedContent ?? contentTypes?.[0]?.id ?? "";
-
-  const effectiveDurationId = selectedDuration ?? durations?.[0]?.id ?? "";
+  const effectiveDurationId = selectedDuration ?? durations.data?.[0]?.id ?? "";
 
   return (
     <div className="bg-slate-50 text-slate-900 font-sans w-full min-h-screen">
@@ -43,7 +41,7 @@ const TemplatesPage = () => {
             Content Type
           </h2>
 
-          {contentTypesLoading ? (
+          {contentTypes.isLoading ? (
             <DropdownSkeleton />
           ) : (
             <select
@@ -51,7 +49,7 @@ const TemplatesPage = () => {
               value={effectiveContentTypeId}
               onChange={(e) => setSelectedContent(e.target.value)}
             >
-              {contentTypes?.map((c) => (
+              {contentTypes.data?.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
@@ -67,11 +65,11 @@ const TemplatesPage = () => {
           </h2>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
-            {stylesLoading
+            {styles.isLoading
               ? Array.from({ length: 5 }).map((_, i) => (
                   <StyleCardSkeleton key={i} />
                 ))
-              : styles?.map((style) => (
+              : styles.data?.map((style) => (
                   <StyleCard
                     key={style.id}
                     id={style.id}
@@ -90,7 +88,7 @@ const TemplatesPage = () => {
             Duration
           </h2>
 
-          {durationsLoading ? (
+          {durations.isLoading ? (
             <DropdownSkeleton />
           ) : (
             <select
@@ -98,7 +96,7 @@ const TemplatesPage = () => {
               value={effectiveDurationId}
               onChange={(e) => setSelectedDuration(e.target.value)}
             >
-              {durations?.map((d) => (
+              {durations.data?.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.label}
                 </option>

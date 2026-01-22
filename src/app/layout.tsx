@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${space.variable} antialiased bg-white `}>
+      <body suppressHydrationWarning className={`${space.variable} antialiased bg-white `}>
         <Provider>{children}</Provider>
       </body>
     </html>
