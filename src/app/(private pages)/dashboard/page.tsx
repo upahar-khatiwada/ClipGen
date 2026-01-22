@@ -5,10 +5,10 @@ import { Wand2, Play, Layout, Sparkles } from "lucide-react";
 import FeatureCard from "./components/FeatureCard";
 
 const DashboardPage = () => {
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState<string>("");
 
   return (
-    <div className="bg-slate-50 text-slate-900 font-sans w-full h-full">
+    <div className="bg-slate-50 text-slate-900 font-sans w-full min-h-screen">
       <main className="mx-auto px-6 py-12">
         <div className="text-center mb-16">
           <h1 className="text-5xl font-extrabold mb-4 bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">

@@ -21,13 +21,16 @@ model User {
   image           String?
   passwordHash    String?
 
+  credits Int @default(50)
+
   verifyToken       String?
   verifyTokenExpiry DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accounts Account[]
+  accounts           Account[]
+  creditTransactions CreditTransaction[]
 }
 
 model Account {
@@ -49,6 +52,37 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+}
+
+model CreditTransaction {
+  id     String                @id @default(uuid())
+  userId String
+  amount Int
+  type   CreditTransactionType
+  reason String?
+
+  stripeSessionId String?
+  stripeInvoiceId String?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+enum CreditTransactionType {
+  PURCHASE
+  SUBSCRIPTION
+  USAGE
+}
+
+// schemas for credits pack
+model CreditPack {
+  id            String  @id @default(uuid())
+  name          String
+  credits       Int
+  priceUsd      Int
+  stripePriceId String
+  active        Boolean @default(true)
 }
 
 // schemas for templates page
