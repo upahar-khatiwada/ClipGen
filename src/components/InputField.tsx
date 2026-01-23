@@ -25,10 +25,10 @@ const InputField = ({
 
       <input
         id={inputId}
-        type={type} // keep it simple
+        type={type}
         placeholder={placeholder}
         {...register}
-        className={`placeholder-gray-400 w-full rounded border p-2 text-sm focus:outline-none focus:ring-1
+        className={`placeholder-gray-400 text-black w-full rounded border p-2 text-sm focus:outline-none focus:ring-1
           ${
             error
               ? "border-red-500 focus:ring-red-500"

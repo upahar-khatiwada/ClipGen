@@ -19,7 +19,7 @@ export default function AuthLayout({
 
       <div
         className="w-full min-h-screen flex items-center justify-center 
-                bg-linear-to-br from-[#d0d1d3] to-[#e0d7ff]"
+                bg-linear-to-br from-[#c9d1db] to-[#e0e4e7]"
       >
         {children}
       </div>

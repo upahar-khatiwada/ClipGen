@@ -66,7 +66,7 @@ const VerifyEmailPage = () => {
           </p>
           <button
             onClick={() => router.push("/login")}
-            className="rounded-md bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 transition-colors duration-200"
+            className="rounded-md bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 transition-colors duration-200 cursor-pointer"
           >
             Login Now
           </button>
@@ -84,7 +84,7 @@ const VerifyEmailPage = () => {
           {showResend && (
             <button
               onClick={() => router.push("/signup")}
-              className="rounded-md bg-red-600 px-6 py-2 text-white hover:bg-red-700 transition-colors duration-200"
+              className="rounded-md bg-red-600 px-6 py-2 text-white hover:bg-red-700 transition-colors duration-200 cursor-pointer"
             >
               Resend Verification Link
             </button>

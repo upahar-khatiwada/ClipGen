@@ -4,6 +4,8 @@ import { comparePassword, hashPassword } from "@/src/utils/password_hasher";
 import {
   createAccessToken,
   createRefreshToken,
+  verifyAccessToken,
+  verifyRefreshToken,
 } from "@/src/utils/token_generators";
 import { cookies } from "next/headers";
 import { sendEmail } from "@/src/services/sendgrid_mailer";
@@ -21,12 +23,14 @@ export const authRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { username, email, password } = input;
 
-      const existingUser = await ctx.prisma.user.findUnique({
-        where: { email },
+      const existingUser = await ctx.prisma.user.findFirst({
+        where: {
+          OR: [{ email }, { name: username }],
+        },
       });
 
       if (existingUser) {
-        if (existingUser.emailVerifiedAt) {
+        if (!existingUser.emailVerifiedAt) {
           await sendEmail({
             email: existingUser.email,
             emailType: "VERIFY",
@@ -41,7 +45,7 @@ export const authRouter = router({
         } else {
           throw new TRPCError({
             code: "CONFLICT",
-            message: "User already exists!",
+            message: "User with this email/username already exists!",
           });
         }
       }
@@ -102,6 +106,7 @@ export const authRouter = router({
       if (!isPasswordOk) {
         return { status: "error", message: "Password doesn't match" };
       }
+
       const accessToken = createAccessToken(existingUser.id);
       const refreshToken = createRefreshToken(existingUser.id);
 
@@ -109,7 +114,6 @@ export const authRouter = router({
         `refresh_token:${refreshToken}`,
         JSON.stringify({
           userId: existingUser.id,
-          accessToken,
         }),
         "EX",
         7 * 24 * 60 * 60,
@@ -124,7 +128,6 @@ export const authRouter = router({
           },
         },
         data: {
-          access_token: accessToken,
           refresh_token: refreshToken,
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
           provider: "session",
@@ -133,8 +136,20 @@ export const authRouter = router({
 
       const cookie = await cookies();
 
-      cookie.set("accessToken", accessToken);
-      cookie.set("refreshToken", refreshToken);
+      cookie.set("accessToken", accessToken, {
+        httpOnly: true,
+        path: "/",
+        maxAge: 15 * 60,
+        secure: process.env.NODE_ENV === "development" ? false : true,
+        sameSite: "lax",
+      });
+      cookie.set("refreshToken", refreshToken, {
+        httpOnly: true,
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60,
+        secure: process.env.NODE_ENV === "development" ? false : true,
+        sameSite: "lax",
+      });
 
       return {
         status: "success",
@@ -217,27 +232,89 @@ export const authRouter = router({
       }
     }),
 
-  // verify: publicProcedure.query(async ({ ctx }) => {
-  //   const cookieStore = await cookies();
-  //   const refreshToken = cookieStore.get("refreshToken")?.value;
+  refresh: publicProcedure.mutation(async ({ ctx }) => {
+    const cookie = ctx.req.headers.get("cookie") ?? "";
 
-  //   if (!refreshToken) {
-  //     return { status: "error", message: "No refresh token found" };
-  //   }
+    const refreshToken = cookie
+      .split(";")
+      .find((c) => c.trim().startsWith("refreshToken="))
+      ?.split("=")[1];
 
-  //   const redisKey = `refresh_token:${refreshToken}`;
-  //   const data = await ctx.redis.get(redisKey);
+    if (!refreshToken) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "No refresh token",
+      });
+    }
 
-  //   if (!data) {
-  //     return { status: "error", message: "Token expired or invalid" };
-  //   }
+    const payload = verifyRefreshToken(refreshToken);
+    if (!payload) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Invalid refresh token",
+      });
+    }
 
-  //   const { userId, accessToken } = JSON.parse(data);
+    const userIdFromToken = payload.userId;
 
-  //   return {
-  //     status: "success",
-  //     userId,
-  //     accessToken,
-  //   };
-  // }),
+    const session = await ctx.redis.get(`refresh_token:${refreshToken}`);
+
+    if (!session) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Refresh token revoked or expired",
+      });
+    }
+
+    const sessionData = JSON.parse(session);
+
+    if (sessionData.userId !== userIdFromToken) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Refresh token user mismatch",
+      });
+    }
+
+    const accessToken = createAccessToken(userIdFromToken);
+
+    const cookieStore = await cookies();
+
+    cookieStore.set("accessToken", accessToken, {
+      httpOnly: true,
+      path: "/",
+      maxAge: 15 * 60,
+      secure: process.env.NODE_ENV !== "development",
+      sameSite: "lax",
+    });
+
+    return {
+      status: "success",
+      message: "Access token refreshed",
+    };
+  }),
+
+  getSession: publicProcedure.query(async ({ ctx }) => {
+    const cookie = ctx.req.headers.get("cookie") ?? "";
+
+    const accessToken = cookie
+      .split(";")
+      .find((c) => c.trim().startsWith("accessToken="))
+      ?.split("=")[1];
+
+    if (!accessToken) return null;
+
+    const payload = verifyAccessToken(accessToken);
+    if (!payload) return null;
+
+    const user = await ctx.prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+
+    return user;
+  }),
 });

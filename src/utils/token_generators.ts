@@ -1,4 +1,12 @@
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
+
+interface AccessTokenPayload extends JwtPayload {
+  userId: string;
+}
+
+interface RefreshTokenPayload extends JwtPayload {
+  userId: string;
+}
 
 export const createAccessToken = (userId: string) => {
   return jwt.sign(
@@ -24,18 +32,26 @@ export const createRefreshToken = (userId: string) => {
   );
 };
 
-export const verifyAccessToken = (token: string) => {
+export const verifyAccessToken = (token: string): AccessTokenPayload | null => {
   try {
-    return jwt.verify(token, process.env.JWT_ACCESS_SECRET!);
+    return jwt.verify(
+      token,
+      process.env.JWT_ACCESS_SECRET!,
+    ) as AccessTokenPayload;
   } catch (err) {
     console.error(`Error in token_generators.ts verifyAccessToken: ${err}`);
     return null;
   }
 };
 
-export const verifyRefreshToken = (token: string) => {
+export const verifyRefreshToken = (
+  token: string,
+): RefreshTokenPayload | null => {
   try {
-    return jwt.verify(token, process.env.JWT_REFRESH_SECRET!);
+    return jwt.verify(
+      token,
+      process.env.JWT_REFRESH_SECRET!,
+    ) as RefreshTokenPayload;
   } catch (err) {
     console.error(`Error in token_generators.ts verifyRefreshToken: ${err}`);
     return null;

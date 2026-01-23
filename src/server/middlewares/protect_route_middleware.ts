@@ -1,30 +1,41 @@
 import { TRPCError } from "@trpc/server";
 import { middleware } from "@/src/server/trpc";
+import { verifyAccessToken } from "@/src/utils/token_generators";
 
 export const protectedRouteMiddleware = middleware(async ({ ctx, next }) => {
   const cookie = ctx.req.headers.get("cookie") ?? "";
-  const refreshToken = cookie
+  const accessToken = cookie
     .split(";")
-    .find((c) => c.trim().startsWith("refreshToken="))
+    .find((c) => c.trim().startsWith("accessToken="))
     ?.split("=")[1];
 
-  if (!refreshToken) {
+  if (!accessToken) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
-      message: "No refresh token",
+      message: "No access token",
     });
   }
 
-  const session = await ctx.redis.get(`refresh_token:${refreshToken}`);
+  const payload = verifyAccessToken(accessToken);
 
-  if (!session) {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid session" });
+  if (!payload) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Invalid or expired access token",
+    });
   }
 
-  const user = JSON.parse(session);
+  const user = await ctx.prisma.user.findUnique({
+    where: { id: payload.userId },
+    select: { id: true, name: true, email: true },
+  });
+
+  if (!user)
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "User not found" });
 
   return next({
     ctx: {
+      ...ctx,
       user,
     },
   });

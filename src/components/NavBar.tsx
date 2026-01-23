@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from "../context/AuthContext";
 
 const NavBar = () => {
   const [creditsOpen, setCreditsOpen] = useState<boolean>(false);
@@ -12,6 +13,8 @@ const NavBar = () => {
 
   const creditsRef = useRef<HTMLDivElement>(null);
   const accountRef = useRef<HTMLDivElement>(null);
+
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -117,9 +120,9 @@ const NavBar = () => {
                 <div className="mb-3">
                   <p className="text-sm text-slate-500">Signed in as</p>
                   <p className="text-lg font-semibold text-slate-900">
-                    Upahar Khatiwada
+                    {user?.name}
                   </p>
-                  <p className="text-xs text-slate-400">upaharlol@gmail.com</p>
+                  <p className="text-xs text-slate-400">{user?.email}</p>
                 </div>
 
                 <Link href="/account">
