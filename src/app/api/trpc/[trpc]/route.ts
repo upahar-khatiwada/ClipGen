@@ -3,12 +3,37 @@ import { appRouter } from "@/src/server/routers/router";
 import { NextRequest } from "next/server";
 import prisma from "@/src/lib/prisma";
 import { redis } from "@/src/server/redis";
+import { verifyAccessToken } from "@/src/utils/token_generators";
 
-const createContext = (opts: { req: Request }) => {
+const createContext = async (opts: { req: Request }) => {
+  const cookie = opts.req.headers.get("cookie") ?? "";
+
+  const accessToken = cookie
+    .split(";")
+    .find((c) => c.trim().startsWith("accessToken="))
+    ?.split("=")[1];
+
+  let user = null;
+
+  if (accessToken) {
+    const payload = verifyAccessToken(accessToken);
+    if (payload) {
+      user = await prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      });
+    }
+  }
+
   return {
     req: opts.req,
     prisma,
     redis,
+    user,
   };
 };
 

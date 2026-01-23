@@ -8,14 +8,17 @@ type User = {
   id: string;
   name: string | null;
   email: string;
+  credits: number;
 };
 
 type AuthContextType = {
   user: User | null;
+  isLoading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  isLoading: true,
 });
 
 export const useAuth = () => {
@@ -29,11 +32,25 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const { data } = trpc.auth.getSession.useQuery();
+  const [userSessionData, userCreditsData] = trpc.useQueries((t) => [
+    t.auth.getSession(),
+    t.user.getUserCredits(),
+  ]);
 
-  const user = data ?? null;
+  const isLoading = userSessionData.isLoading || userCreditsData.isLoading;
+
+  const user = userSessionData.data
+    ? {
+        id: userSessionData.data.id,
+        name: userSessionData.data.name,
+        email: userSessionData.data.email,
+        credits: userCreditsData.data?.credits ?? 0,
+      }
+    : null;
 
   return (
-    <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, isLoading }}>
+      {children}
+    </AuthContext.Provider>
   );
 };

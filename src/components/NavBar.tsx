@@ -14,7 +14,7 @@ const NavBar = () => {
   const creditsRef = useRef<HTMLDivElement>(null);
   const accountRef = useRef<HTMLDivElement>(null);
 
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -63,7 +63,11 @@ const NavBar = () => {
           className="flex gap-2 items-center rounded-full bg-indigo-50 px-3 py-1 text-indigo-700 font-semibold hover:bg-indigo-100 transition-colors cursor-pointer"
         >
           <Image src="/svgs/coin.svg" alt="coin" width={23} height={23} />
-          <span className="text-[18px]">50</span>
+          {isLoading ? (
+            <div className="h-5 w-12 bg-indigo-200 rounded animate-pulse" />
+          ) : (
+            <span className="text-[18px]">{user?.credits}</span>
+          )}
         </button>
 
         <AnimatePresence>

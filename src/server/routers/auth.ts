@@ -5,7 +5,6 @@ import {
   createAccessToken,
   createRefreshToken,
   verifyAccessToken,
-  verifyRefreshToken,
 } from "@/src/utils/token_generators";
 import { cookies } from "next/headers";
 import { sendEmail } from "@/src/services/sendgrid_mailer";
@@ -130,7 +129,7 @@ export const authRouter = router({
         data: {
           refresh_token: refreshToken,
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          provider: "session",
+          provider: "email",
         },
       });
 
@@ -232,66 +231,66 @@ export const authRouter = router({
       }
     }),
 
-  refresh: publicProcedure.mutation(async ({ ctx }) => {
-    const cookie = ctx.req.headers.get("cookie") ?? "";
+  // refresh: publicProcedure.mutation(async ({ ctx }) => {
+  //   const cookie = ctx.req.headers.get("cookie") ?? "";
 
-    const refreshToken = cookie
-      .split(";")
-      .find((c) => c.trim().startsWith("refreshToken="))
-      ?.split("=")[1];
+  //   const refreshToken = cookie
+  //     .split(";")
+  //     .find((c) => c.trim().startsWith("refreshToken="))
+  //     ?.split("=")[1];
 
-    if (!refreshToken) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "No refresh token",
-      });
-    }
+  //   if (!refreshToken) {
+  //     throw new TRPCError({
+  //       code: "UNAUTHORIZED",
+  //       message: "No refresh token",
+  //     });
+  //   }
 
-    const payload = verifyRefreshToken(refreshToken);
-    if (!payload) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Invalid refresh token",
-      });
-    }
+  //   const payload = verifyRefreshToken(refreshToken);
+  //   if (!payload) {
+  //     throw new TRPCError({
+  //       code: "UNAUTHORIZED",
+  //       message: "Invalid refresh token",
+  //     });
+  //   }
 
-    const userIdFromToken = payload.userId;
+  //   const userIdFromToken = payload.userId;
 
-    const session = await ctx.redis.get(`refresh_token:${refreshToken}`);
+  //   const session = await ctx.redis.get(`refresh_token:${refreshToken}`);
 
-    if (!session) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Refresh token revoked or expired",
-      });
-    }
+  //   if (!session) {
+  //     throw new TRPCError({
+  //       code: "UNAUTHORIZED",
+  //       message: "Refresh token revoked or expired",
+  //     });
+  //   }
 
-    const sessionData = JSON.parse(session);
+  //   const sessionData = JSON.parse(session);
 
-    if (sessionData.userId !== userIdFromToken) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Refresh token user mismatch",
-      });
-    }
+  //   if (sessionData.userId !== userIdFromToken) {
+  //     throw new TRPCError({
+  //       code: "UNAUTHORIZED",
+  //       message: "Refresh token user mismatch",
+  //     });
+  //   }
 
-    const accessToken = createAccessToken(userIdFromToken);
+  //   const accessToken = createAccessToken(userIdFromToken);
 
-    const cookieStore = await cookies();
+  //   const cookieStore = await cookies();
 
-    cookieStore.set("accessToken", accessToken, {
-      httpOnly: true,
-      path: "/",
-      maxAge: 15 * 60,
-      secure: process.env.NODE_ENV !== "development",
-      sameSite: "lax",
-    });
+  //   cookieStore.set("accessToken", accessToken, {
+  //     httpOnly: true,
+  //     path: "/",
+  //     maxAge: 15 * 60,
+  //     secure: process.env.NODE_ENV !== "development",
+  //     sameSite: "lax",
+  //   });
 
-    return {
-      status: "success",
-      message: "Access token refreshed",
-    };
-  }),
+  //   return {
+  //     status: "success",
+  //     message: "Access token refreshed",
+  //   };
+  // }),
 
   getSession: publicProcedure.query(async ({ ctx }) => {
     const cookie = ctx.req.headers.get("cookie") ?? "";

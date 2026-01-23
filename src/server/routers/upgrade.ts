@@ -46,8 +46,13 @@ export const upgradeRouer = router({
             quantity: 1,
           },
         ],
-        success_url: `${process.env.DOMAIN}/upgrade/success`,
-        cancel_url: `${process.env.DOMAIN}/upgrade/failure`,
+        success_url: `${process.env.DOMAIN}/upgrade/success?paid=true`,
+        cancel_url: `${process.env.DOMAIN}/upgrade/failure?success=false`,
+        metadata: {
+          userId: ctx.user!.id,
+          creditPackId: creditPack.id,
+          credits: creditPack.credits,
+        },
       });
 
       return { url: session.url };
@@ -78,8 +83,12 @@ export const upgradeRouer = router({
             quantity: 1,
           },
         ],
-        success_url: `${process.env.DOMAIN}/upgrade/success`,
-        cancel_url: `${process.env.DOMAIN}/upgrade/failure`,
+        success_url: `${process.env.DOMAIN}/upgrade/success?paid=true`,
+        cancel_url: `${process.env.DOMAIN}/upgrade/failure?success=false`,
+        metadata: {
+          userId: ctx.user!.id,
+          planId: input.planId,
+        },
       });
 
       return { url: session.url };
