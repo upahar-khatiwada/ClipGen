@@ -10,14 +10,33 @@ const UpgradePage = () => {
   const [selectedCredits, setSelectedCredits] = useState<number | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
+  const buyCredits = trpc.upgrade.createCreditCheckout.useMutation();
+  const buySubscription = trpc.upgrade.createSubscriptionCheckout.useMutation();
+
   const [creditPacks, subscriptions] = trpc.useQueries((t) => [
     t.upgrade.getCreditDetails(),
     t.upgrade.getSubscriptionDetails(),
   ]);
 
-  const handleBuyCredits = () => {};
+  const handleBuyCredits = async () => {
+    if (!selectedCredits) return;
 
-  const handleBuySubscription = () => {};
+    const res = await buyCredits.mutateAsync({
+      credits: selectedCredits,
+    });
+
+    window.location.href = res.url!;
+  };
+
+  const handleBuySubscription = async () => {
+    if (!selectedPlan) return;
+
+    const res = await buySubscription.mutateAsync({
+      planId: selectedPlan,
+    });
+
+    window.location.href = res.url!;
+  };
 
   return (
     <div className="bg-slate-50 text-slate-900 font-sans w-full min-h-screen">
@@ -83,7 +102,7 @@ const UpgradePage = () => {
                     }`}
                     description={plan.perks}
                     selected={selectedPlan === plan.id}
-                    onSelect={() => setSelectedPlan(plan.interval)}
+                    onSelect={() => setSelectedPlan(plan.id)}
                   />
                 ))}
           </div>
