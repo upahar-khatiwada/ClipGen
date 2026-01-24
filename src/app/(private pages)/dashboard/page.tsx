@@ -30,18 +30,20 @@ const DashboardPage = () => {
   };
 
   const { data } = trpc.generateVideo.getJobStatus.useQuery(
-    { jobId: jobId ?? "" },
+    { jobId: jobId! },
     {
       enabled: !!jobId && isGenerating,
       refetchInterval: 2000,
-      notifyOnChangeProps: ["data"],
     },
   );
 
   const videoReady = data?.status === "completed";
   const videoFailed = data?.status === "failed";
-
-  const showGeneratingModal = isGenerating && !videoReady && !videoFailed;
+  const dialogStatus = videoFailed
+    ? "failed"
+    : videoReady
+      ? "completed"
+      : "processing";
 
   useEffect(() => {
     if (!data) return;
@@ -74,7 +76,7 @@ const DashboardPage = () => {
             </label>
             <textarea
               maxLength={500}
-              minLength={100}
+              minLength={1}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="e.g. A 30-second motivational video about morning routines with lo-fi music..."
@@ -94,26 +96,16 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {videoReady && (
-          <div className="mt-8">
-            <h2 className="text-xl font-bold mb-2">Your Generated Short</h2>
-            <video
-              src={data.videoUrl}
-              controls
-              autoPlay
-              loop
-              className="w-full rounded-xl shadow-lg"
-            />
-          </div>
+        {isGenerating && data && (
+          <GeneratingShortDialog
+            status={dialogStatus}
+            videoUrl={data.videoUrl}
+            onClose={() => {
+              setIsGenerating(false);
+              setJobId(null);
+            }}
+          />
         )}
-
-        {/* {!videoFailed && (
-          <p className="text-red-500 flex items-center justify-center mb-8">
-            Video generation failed. Try again.
-          </p>
-        )} */}
-
-        {showGeneratingModal && <GeneratingShortDialog />}
 
         <div className="grid md:grid-cols-3 gap-8">
           <FeatureCard

@@ -1,9 +1,11 @@
-import fs from "fs";
-import path from "path";
+// import fs from "fs";
+// import path from "path";
 import { redis } from "../server/redis";
-import { GoogleGenAI } from "@google/genai";
+// import { GoogleGenAI } from "@google/genai";
 
 // const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY! });
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function generateAiShort({
   jobId,
@@ -15,6 +17,10 @@ export async function generateAiShort({
   userId: string;
 }) {
   try {
+    await sleep(5000);
+
+    const videoUrl = "/videos/video.mp4";
+
     // let operation = await ai.models.generateVideos({
     //   model: "veo-3.1-generate-preview",
     //   prompt,
@@ -47,7 +53,7 @@ export async function generateAiShort({
       JSON.stringify({
         status: "completed",
         userId,
-        // videoUrl,
+        videoUrl,
       }),
       "EX",
       60 * 60,
@@ -59,7 +65,6 @@ export async function generateAiShort({
       `video_job:${jobId}`,
       JSON.stringify({
         status: "failed",
-        error: err instanceof Error ? err.message : "Unknown error",
       }),
       "EX",
       60 * 10,

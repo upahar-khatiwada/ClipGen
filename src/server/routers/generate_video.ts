@@ -5,7 +5,7 @@ import { generateAiShort } from "@/src/controllers/generate_ai_short";
 
 export const generateVideoRouter = router({
   generateShortFromPrompt: privateProcedure
-    .input(z.object({ prompt: z.string().min(100).max(500) }))
+    .input(z.object({ prompt: z.string().min(1).max(500) }))
     .mutation(async ({ ctx, input }) => {
       const { prompt } = input;
       const userId = ctx.user!.id;
@@ -43,6 +43,11 @@ export const generateVideoRouter = router({
         });
       }
 
-      return JSON.parse(job);
+      const parsed = JSON.parse(job);
+
+      return {
+        status: parsed.status as "processing" | "completed" | "failed",
+        videoUrl: parsed.videoUrl as string | undefined,
+      };
     }),
 });
