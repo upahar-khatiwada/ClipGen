@@ -4,6 +4,7 @@ import { trpc } from "@/src/app/_trpc/client";
 import InputField from "@/src/components/InputField";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 type SignUpFormValues = {
   username: string;
@@ -29,7 +30,12 @@ const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         onSuccess(input.email);
       }
     },
+
     onError: (err) => {
+      if (err.data?.code === "TOO_MANY_REQUESTS") {
+        toast.error("You're hitting the rate limit. Please wait a bit!");
+      }
+
       setFormError(err.message);
     },
   });

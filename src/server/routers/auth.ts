@@ -3,7 +3,6 @@ import { publicProcedure, router } from "../trpc";
 import { comparePassword, hashPassword } from "@/src/utils/password_hasher";
 import {
   createAccessToken,
-  createRefreshToken,
   verifyAccessToken,
 } from "@/src/utils/token_generators";
 import { cookies } from "next/headers";
@@ -107,17 +106,8 @@ export const authRouter = router({
       }
 
       const accessToken = createAccessToken(existingUser.id);
-      const refreshToken = createRefreshToken(existingUser.id);
 
-      await ctx.redis.set(
-        `refresh_token:${refreshToken}`,
-        JSON.stringify({
-          userId: existingUser.id,
-        }),
-        "EX",
-        7 * 24 * 60 * 60,
-      );
-
+      // TODO ADD TOKEN IN REDIS HERE
       await ctx.prisma.account.update({
         where: {
           userId: existingUser.id,
@@ -127,7 +117,6 @@ export const authRouter = router({
           },
         },
         data: {
-          refresh_token: refreshToken,
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
           provider: "email",
         },
@@ -136,13 +125,6 @@ export const authRouter = router({
       const cookie = await cookies();
 
       cookie.set("accessToken", accessToken, {
-        httpOnly: true,
-        path: "/",
-        maxAge: 15 * 60,
-        secure: process.env.NODE_ENV === "development" ? false : true,
-        sameSite: "lax",
-      });
-      cookie.set("refreshToken", refreshToken, {
         httpOnly: true,
         path: "/",
         maxAge: 7 * 24 * 60 * 60,
@@ -275,20 +257,22 @@ export const authRouter = router({
   //   }
 
   //   const accessToken = createAccessToken(userIdFromToken);
+  //   const newRefreshToken = createRefreshToken(userIdFromToken);
 
-  //   const cookieStore = await cookies();
-
-  //   cookieStore.set("accessToken", accessToken, {
-  //     httpOnly: true,
-  //     path: "/",
-  //     maxAge: 15 * 60,
-  //     secure: process.env.NODE_ENV !== "development",
-  //     sameSite: "lax",
-  //   });
+  //   await ctx.redis
+  //     .multi()
+  //     .del(`refresh_token:${refreshToken}`)
+  //     .set(
+  //       `refresh_token:${newRefreshToken}`,
+  //       JSON.stringify({ userId: userIdFromToken }),
+  //     )
+  //     .exec();
 
   //   return {
   //     status: "success",
-  //     message: "Access token refreshed",
+  //     message: "Tokens refreshed",
+  //     accessToken,
+  //     refreshToken: newRefreshToken,
   //   };
   // }),
 

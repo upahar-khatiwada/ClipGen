@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { trpc } from "@/src/app/_trpc/client";
+import { toast } from "sonner";
 
 const VerifyEmailPage = () => {
   const router = useRouter();
@@ -36,6 +37,9 @@ const VerifyEmailPage = () => {
         case "CONFLICT":
           setErrorMessage("User already verified");
           setShowResend(false);
+          break;
+        case "TOO_MANY_REQUESTS":
+          toast.error("You're hitting the rate limit. Please wait a bit!");
           break;
         default:
           setErrorMessage("Verification failed, Try Again!");

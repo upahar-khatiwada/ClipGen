@@ -1,11 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Wand2, Play, Layout, Sparkles } from "lucide-react";
 import FeatureCard from "./components/FeatureCard";
+import GeneratingShortDialog from "@/src/components/GeneratingShortDialog";
+import { trpc } from "../../_trpc/client";
+import { toast } from "sonner";
 
 const DashboardPage = () => {
   const [prompt, setPrompt] = useState<string>("");
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [jobId, setJobId] = useState<string | null>(null);
+
+  const generateShortMutation =
+    trpc.generateVideo.generateShortFromPrompt.useMutation({
+      onSuccess: (data) => {
+        setJobId(data.jobId);
+        setIsGenerating(true);
+      },
+      onError: (err) => {
+        if (err.data?.code === "TOO_MANY_REQUESTS") {
+          toast.error("You're hitting the rate limit. Please wait a bit!");
+        }
+      },
+    });
+
+  const generateShort = (prompt: string) => {
+    generateShortMutation.mutate({ prompt });
+  };
+
+  const { data } = trpc.generateVideo.getJobStatus.useQuery(
+    { jobId: jobId ?? "" },
+    {
+      enabled: !!jobId && isGenerating,
+      refetchInterval: 2000,
+      notifyOnChangeProps: ["data"],
+    },
+  );
+
+  const videoReady = data?.status === "completed";
+  const videoFailed = data?.status === "failed";
+
+  const showGeneratingModal = isGenerating && !videoReady && !videoFailed;
+
+  useEffect(() => {
+    if (!data) return;
+
+    if (videoFailed) {
+      toast.error("Video generation failed. Try again.");
+    } else if (videoReady) {
+      toast.success("Your short is ready!");
+    }
+  }, [data, videoFailed, videoReady]);
 
   return (
     <div className="bg-slate-50 text-slate-900 font-sans w-full min-h-screen">
@@ -27,19 +73,47 @@ const DashboardPage = () => {
               What is your short about?
             </label>
             <textarea
+              maxLength={500}
+              minLength={100}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="e.g. A 30-second motivational video about morning routines with lo-fi music..."
               className="w-full p-4 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all h-32 resize-none text-slate-700"
             />
             <div className="flex justify-end items-center">
-              <button className="flex cursor-pointer items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all transform hover:scale-105 active:scale-95">
+              <button
+                onClick={() => {
+                  generateShort(prompt);
+                }}
+                className="flex cursor-pointer items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all transform hover:scale-105 active:scale-95"
+              >
                 <Wand2 size={20} />
                 Generate Short
               </button>
             </div>
           </div>
         </div>
+
+        {videoReady && (
+          <div className="mt-8">
+            <h2 className="text-xl font-bold mb-2">Your Generated Short</h2>
+            <video
+              src={data.videoUrl}
+              controls
+              autoPlay
+              loop
+              className="w-full rounded-xl shadow-lg"
+            />
+          </div>
+        )}
+
+        {/* {!videoFailed && (
+          <p className="text-red-500 flex items-center justify-center mb-8">
+            Video generation failed. Try again.
+          </p>
+        )} */}
+
+        {showGeneratingModal && <GeneratingShortDialog />}
 
         <div className="grid md:grid-cols-3 gap-8">
           <FeatureCard

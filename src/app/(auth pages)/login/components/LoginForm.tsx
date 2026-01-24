@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import InputField from "@/src/components/InputField";
 import { trpc } from "@/src/app/_trpc/client";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type LoginFormValues = {
   email: string;
@@ -25,6 +26,11 @@ export default function LoginForm() {
         router.push("/dashboard");
       } else if (res.status === "error") {
         alert(res.message);
+      }
+    },
+    onError: (err) => {
+      if (err.data?.code === "TOO_MANY_REQUESTS") {
+        toast.error("You're hitting the rate limit. Please wait a bit!");
       }
     },
   });

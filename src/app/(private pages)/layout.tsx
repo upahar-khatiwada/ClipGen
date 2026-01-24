@@ -2,6 +2,7 @@ import NavBar from "@/src/components/NavBar";
 import SideBar from "@/src/components/SideBar";
 import { AuthProvider } from "@/src/context/AuthContext";
 import React from "react";
+import { Toaster } from "sonner";
 
 const LayoutPage = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -15,7 +16,10 @@ const LayoutPage = ({ children }: { children: React.ReactNode }) => {
           <div className="hidden md:block md:w-64 h-[calc(100vh-72px)] sticky top-18 bg-slate-50 shadow-md">
             <SideBar />
           </div>
-          <div className="bg-gray-50 w-full">{children}</div>
+          <div className="bg-gray-50 w-full">
+            {children}
+            <Toaster position="bottom-right" richColors />
+          </div>
         </div>
       </div>
     </AuthProvider>

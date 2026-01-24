@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { redis } from "./server/redis";
+import { verifyAccessToken } from "./utils/token_generators";
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  const refreshToken = req.cookies.get("refreshToken")?.value;
+  const accessToken = req.cookies.get("accessToken")?.value;
 
   let isLoggedIn = false;
 
-  if (refreshToken) {
-    const session = await redis.get(`refresh_token:${refreshToken}`);
-    if (session) isLoggedIn = true;
+  if (accessToken) {
+    const payload = verifyAccessToken(accessToken);
+    if (payload) {
+      isLoggedIn = true;
+    }
   }
 
   if (isLoggedIn && (pathname === "/login" || pathname === "/signup")) {
