@@ -1,5 +1,6 @@
 // import fs from "fs";
 // import path from "path";
+import { TRPCError } from "@trpc/server";
 import { redis } from "../server/redis";
 // import { GoogleGenAI } from "@google/genai";
 
@@ -48,16 +49,21 @@ export async function generateAiShort({
 
     // const videoUrl = `/videos/${fileName}`;
 
-    await redis.set(
-      `video_job:${jobId}`,
-      JSON.stringify({
-        status: "completed",
-        userId,
-        videoUrl,
-      }),
-      "EX",
-      60 * 60,
-    );
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Simulated backend failure",
+    });
+
+    // await redis.set(
+    //   `video_job:${jobId}`,
+    //   JSON.stringify({
+    //     status: "completed",
+    //     userId,
+    //     videoUrl,
+    //   }),
+    //   "EX",
+    //   60 * 60,
+    // );
   } catch (err) {
     console.error("Veo generation failed:", err);
 

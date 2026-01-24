@@ -21,6 +21,8 @@ const DashboardPage = () => {
       onError: (err) => {
         if (err.data?.code === "TOO_MANY_REQUESTS") {
           toast.error("You're hitting the rate limit. Please wait a bit!");
+        } else {
+          toast.error("An error has occured while generating the short!");
         }
       },
     });
@@ -76,7 +78,7 @@ const DashboardPage = () => {
             </label>
             <textarea
               maxLength={500}
-              minLength={1}
+              minLength={100}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="e.g. A 30-second motivational video about morning routines with lo-fi music..."
@@ -87,7 +89,8 @@ const DashboardPage = () => {
                 onClick={() => {
                   generateShort(prompt);
                 }}
-                className="flex cursor-pointer items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all transform hover:scale-105 active:scale-95"
+                disabled={prompt.length < 100}
+                className="flex cursor-pointer items-center gap-2 disabled:cursor-not-allowed disabled:bg-indigo-300 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all transform hover:scale-105 active:scale-95"
               >
                 <Wand2 size={20} />
                 Generate Short

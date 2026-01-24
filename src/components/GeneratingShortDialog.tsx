@@ -17,7 +17,7 @@ const GeneratingShortDialog = ({
         {status === "completed" && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -63,6 +63,12 @@ const GeneratingShortDialog = ({
 
         {status === "failed" && (
           <div className="text-center">
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              <X size={18} />
+            </button>
             <h2 className="text-xl font-bold text-red-600">
               Generation Failed
             </h2>

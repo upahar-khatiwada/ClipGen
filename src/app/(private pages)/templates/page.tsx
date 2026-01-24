@@ -6,17 +6,76 @@ import StyleCard from "./components/StyleCard";
 import { trpc } from "../../_trpc/client";
 import StyleCardSkeleton from "./skeletons/StyleCardSkeleton";
 import DropdownSkeleton from "./skeletons/DropdownSkeleton";
+import { toast } from "sonner";
+import GeneratingShortDialog from "@/src/components/GeneratingShortDialog";
 
 const TemplatesPage = () => {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [selectedContent, setSelectedContent] = useState<string | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [jobId, setJobId] = useState<string | null>(null);
 
   const [contentTypes, styles, durations] = trpc.useQueries((t) => [
     t.templates.getContentTypes(),
     t.templates.getStyles(),
     t.templates.getDuration(),
   ]);
+
+  const buildTemplatePrompt = () => {
+    const contentTypeName =
+      contentTypes.data?.find((c) => c.id === effectiveContentTypeId)?.name ??
+      "";
+
+    const styleName =
+      styles.data?.find((s) => s.id === selectedStyle)?.name ?? "";
+
+    const durationLabel =
+      durations.data?.find((d) => d.id === effectiveDurationId)?.label ?? "";
+
+    return `
+Create a ${durationLabel} vertical short-form video.
+
+Content type: ${contentTypeName}
+Style: ${styleName}
+
+Requirements:
+- Strong hook in first 2 seconds
+- Bold viral captions
+- Cinematic pacing
+- Optimized for TikTok, Reels, Shorts
+`.trim();
+  };
+
+  const generateShortMutation =
+    trpc.generateVideo.generateShortFromPrompt.useMutation({
+      onSuccess: (data) => {
+        setJobId(data.jobId);
+        setIsGenerating(true);
+      },
+      onError: (err) => {
+        if (err.data?.code === "TOO_MANY_REQUESTS") {
+          toast.error("You're hitting the rate limit. Please wait a bit!");
+        }
+      },
+    });
+
+  const { data } = trpc.generateVideo.getJobStatus.useQuery(
+    { jobId: jobId! },
+    {
+      enabled: !!jobId && isGenerating,
+      refetchInterval: 2000,
+    },
+  );
+
+  const videoReady = data?.status === "completed";
+  const videoFailed = data?.status === "failed";
+
+  const dialogStatus = videoFailed
+    ? "failed"
+    : videoReady
+      ? "completed"
+      : "processing";
 
   const effectiveContentTypeId =
     selectedContent ?? contentTypes.data?.[0]?.id ?? "";
@@ -108,10 +167,24 @@ const TemplatesPage = () => {
         <div className="md:ml-auto mt-4">
           <button
             disabled={!selectedContent || !selectedStyle || !selectedDuration}
-            className="px-6 py-3 w-full bg-indigo-600 disabled:bg-indigo-300 text-white rounded-xl font-semibold hover:bg-indigo-700 transition duration-200 cursor-pointer"
+            onClick={() => {
+              const prompt = buildTemplatePrompt();
+              generateShortMutation.mutate({ prompt });
+            }}
+            className="px-6 py-3 w-full bg-indigo-600 disabled:bg-indigo-300 disabled:cursor-not-allowed text-white rounded-xl font-semibold hover:bg-indigo-700 transition duration-200 cursor-pointer"
           >
             Generate
           </button>
+          {isGenerating && (
+            <GeneratingShortDialog
+              status={dialogStatus}
+              videoUrl={data?.videoUrl}
+              onClose={() => {
+                setIsGenerating(false);
+                setJobId(null);
+              }}
+            />
+          )}
         </div>
       </div>
     </div>
