@@ -14,25 +14,35 @@ export const accountRouter = router({
       type: "upload",
       prefix: `videos-${userId}`,
       max_results: 100,
+      context: true,
     });
 
-    return result.resources.map((video: CloudinaryVideoResource) => ({
-      publicId: video.public_id,
-      url: video.secure_url,
-      thumbnail:
-        video.thumbnail ??
-        cloudinary.url(video.public_id, {
-          resource_type: "video",
-          format: "jpg",
-          width: 300,
-          height: 600,
-          crop: "fill",
-          start_offset: "2",
-        }),
-      duration: video.duration,
-      bytes: video.bytes,
-      createdAt: video.created_at,
-    }));
+    return result.resources.map((video: CloudinaryVideoResource) => {
+      console.log(video.context);
+
+      const customContext = video.context as
+        | { custom?: { title?: string } }
+        | undefined;
+
+      return {
+        publicId: video.public_id,
+        url: video.secure_url,
+        title: customContext?.custom?.title ?? "Untitled",
+        thumbnail:
+          video.thumbnail ??
+          cloudinary.url(video.public_id, {
+            resource_type: "video",
+            format: "jpg",
+            width: 300,
+            height: 600,
+            crop: "fill",
+            start_offset: "2",
+          }),
+        duration: video.duration,
+        bytes: video.bytes,
+        createdAt: video.created_at,
+      };
+    });
   }),
 
   updateVideoTitle: privateProcedure
@@ -46,9 +56,9 @@ export const accountRouter = router({
       const { publicId, newTitle } = input;
 
       await cloudinary.uploader.explicit(publicId, {
-        resource_type: "video",
         type: "upload",
-        context: { title: newTitle },
+        context: `title=${newTitle}`,
+        resource_type: "video",
       });
 
       return { success: true, publicId, newTitle };
