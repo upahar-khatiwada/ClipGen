@@ -2,6 +2,7 @@
 // import path from "path";
 import { TRPCError } from "@trpc/server";
 import { redis } from "../server/redis";
+import cloudinary from "../services/cloudinary_video_storage";
 // import { GoogleGenAI } from "@google/genai";
 
 // const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY! });
@@ -40,6 +41,43 @@ export async function generateAiShort({
     // }
 
     // const buffer = Buffer.from(videoBase64, "base64");
+
+    const uploadResult = await cloudinary.uploader.upload(
+      "C:/Users/Legion/Desktop/ai-short-generator/public/videos/video.mp4",
+      {
+        resource_type: "video",
+        folder: `videos-${userId}`,
+        eager: [
+          {
+            format: "jpg",
+            width: 300,
+            height: 600,
+            crop: "fill",
+            start_offset: "2",
+          },
+        ],
+      },
+    );
+
+    const cloudinary_url = uploadResult.secure_url;
+    const thumbnail_url = uploadResult.eager?.[0].secure_url;
+
+    // const uploadResult = await new Promise((resolve, reject) => {
+    //   cloudinary.uploader
+    //     .upload_stream(
+    //       {
+    //         resource_type: "video",
+    //         folder: "generated-videos",
+    //         public_id: jobId,
+    //       },
+    //       (error, result) => {
+    //         if (error) reject(error);
+    //         else resolve(result);
+    //       },
+    //     )
+    //     .end(buffer);
+    // });
+
     // const videosDir = path.join(process.cwd(), "public", "videos");
     // await fs.promises.mkdir(videosDir, { recursive: true });
 
@@ -49,21 +87,24 @@ export async function generateAiShort({
 
     // const videoUrl = `/videos/${fileName}`;
 
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Simulated backend failure",
-    });
+    // throw new TRPCError({
+    //   code: "INTERNAL_SERVER_ERROR",
+    //   message: "Simulated backend failure",
+    // });
 
-    // await redis.set(
-    //   `video_job:${jobId}`,
-    //   JSON.stringify({
-    //     status: "completed",
-    //     userId,
-    //     videoUrl,
-    //   }),
-    //   "EX",
-    //   60 * 60,
-    // );
+
+    // TODO SAVE IN DB
+    await redis.set(
+      `video_job:${jobId}`,
+      JSON.stringify({
+        status: "completed",
+        userId,
+        videoUrl: cloudinary_url,
+        thumbnail_url: thumbnail_url,
+      }),
+      "EX",
+      60 * 60,
+    );
   } catch (err) {
     console.error("Veo generation failed:", err);
 

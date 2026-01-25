@@ -1,4 +1,5 @@
 import { router, publicProcedure } from "../trpc";
+import { accountRouter } from "./account";
 import { authRouter } from "./auth";
 import { generateVideoRouter } from "./generate_video";
 import { templatesRouter } from "./templates";
@@ -17,6 +18,8 @@ export const appRouter = router({
   user: userRouter,
 
   generateVideo: generateVideoRouter,
+
+  account: accountRouter,
 });
 
 export type AppRouter = typeof appRouter;

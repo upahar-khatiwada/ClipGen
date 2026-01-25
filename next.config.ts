@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       "picsum.photos",
       "images.unsplash.com",
       "cdn.midjourney.com",
+      "res.cloudinary.com",
     ],
   },
 };

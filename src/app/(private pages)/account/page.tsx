@@ -1,33 +1,30 @@
 "use client";
 
 import { CreditCard, Crown, Video, Calendar } from "lucide-react";
-import Image from "next/image";
+import Link from "next/link";
+import { trpc } from "../../_trpc/client";
+import { VideoCardSkeleton } from "./skeletons/VideoCardSkeleton";
+import { VideoCard } from "./components/VideoCard";
+import { useAuth } from "@/src/context/AuthContext";
 
-const pastVideos = [
-  {
-    id: 1,
-    title: "Morning Motivation",
-    duration: "30s",
-    createdAt: "Jan 12, 2026",
-    thumbnail: "/templates/cartoon.webp",
-  },
-  {
-    id: 2,
-    title: "Did You Know – Space",
-    duration: "15s",
-    createdAt: "Jan 10, 2026",
-    thumbnail: "/templates/cinematic.avif",
-  },
-  {
-    id: 3,
-    title: "Podcast Highlight",
-    duration: "60s",
-    createdAt: "Jan 08, 2026",
-    thumbnail: "/templates/realistic.webp",
-  },
-];
+type Video = {
+  publicId: string;
+  url: string;
+  thumbnail?: string;
+  duration?: number | string;
+  createdAt?: string;
+  title?: string;
+};
 
 const AccountPage = () => {
+  const {
+    data: allVideos,
+    error: allVideosError,
+    isLoading: allVideosLoading,
+  } = trpc.account.getAllVideosOfCurrentUser.useQuery<Video[]>();
+
+  const { user } = useAuth();
+
   return (
     <div className="bg-slate-50 text-slate-900 font-sans w-full min-h-screen">
       <main className="max-w-6xl mx-auto px-6 py-12 space-y-16">
@@ -50,9 +47,11 @@ const AccountPage = () => {
             <p className="text-sm text-slate-500 mb-4">
               Billed monthly · Renews Feb 12, 2026
             </p>
-            <button className="w-full mt-3 py-2 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors duration-200 cursor-pointer">
-              Manage Subscription
-            </button>
+            <Link href="/upgrade">
+              <button className="w-full mt-3 py-2 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors duration-200 cursor-pointer">
+                Manage Subscription
+              </button>
+            </Link>
           </div>
 
           <div className="bg-white p-6 rounded-2xl shadow-md border border-indigo-50">
@@ -60,11 +59,13 @@ const AccountPage = () => {
               <CreditCard className="text-emerald-600" />
               <h3 className="font-bold text-lg">Credits</h3>
             </div>
-            <p className="text-3xl font-extrabold mb-1">120</p>
+            <p className="text-3xl font-extrabold mb-1">{user?.credits}</p>
             <p className="text-sm text-slate-500 mb-4">Remaining credits</p>
-            <button className="cursor-pointer w-full py-2 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors duration-200">
-              Buy More Credits
-            </button>
+            <Link href="/upgrade">
+              <button className="cursor-pointer w-full py-2 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors duration-200">
+                Buy More Credits
+              </button>
+            </Link>
           </div>
 
           <div className="bg-white p-6 rounded-2xl shadow-md border border-indigo-50">
@@ -85,33 +86,28 @@ const AccountPage = () => {
             <h2 className="text-2xl font-bold">Your Videos</h2>
           </div>
 
-          {pastVideos.length === 0 ? (
+          {allVideosLoading ? (
+            <div className="grid w-full sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <VideoCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : allVideosError || !allVideos?.length ? (
             <p className="text-slate-500">
               You haven’t generated any videos yet.
             </p>
           ) : (
             <div className="grid w-full sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {pastVideos.map((video) => (
-                <div
-                  key={video.id}
-                  className="bg-white rounded-3xl shadow-md border-none hover:shadow-xl hover:scale-105 transition duration-200 cursor-pointer"
-                >
-                  <div className="bg-slate-200 rounded-3xl">
-                    <Image
-                      src={video.thumbnail}
-                      alt={video.title}
-                      className="w-full h-full object-cover rounded-t-3xl"
-                      height={100}
-                      width={60}
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold mb-1">{video.title}</h3>
-                    <p className="text-sm text-slate-500">
-                      {video.duration} · {video.createdAt}
-                    </p>
-                  </div>
-                </div>
+              {allVideos.map((video) => (
+                <VideoCard
+                  key={video.publicId}
+                  publicId={video.publicId}
+                  title={video.title}
+                  thumbnail={video.thumbnail ?? "/placeholder.webp"}
+                  url={video.url}
+                  duration={video.duration}
+                  createdAt={video.createdAt}
+                />
               ))}
             </div>
           )}
