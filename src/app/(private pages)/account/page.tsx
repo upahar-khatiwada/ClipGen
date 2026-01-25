@@ -74,9 +74,10 @@ const AccountPage = () => {
               <h3 className="font-bold text-lg">Usage</h3>
             </div>
             <p className="text-slate-600">
-              <span className="font-semibold">38</span> videos generated
+              <span className="font-semibold">{allVideos?.length}</span> videos
+              generated
             </p>
-            <p className="text-sm text-slate-500 mt-1">This billing cycle</p>
+            <p className="text-sm text-slate-500 mt-1">Lifetime Usage</p>
           </div>
         </div>
 
@@ -103,9 +104,8 @@ const AccountPage = () => {
                   key={video.publicId}
                   publicId={video.publicId}
                   title={video.title}
-                  thumbnail={video.thumbnail ?? "/placeholder.webp"}
+                  thumbnail={video.thumbnail ?? "/placeholder.png"}
                   url={video.url}
-                  duration={video.duration}
                   createdAt={video.createdAt}
                 />
               ))}

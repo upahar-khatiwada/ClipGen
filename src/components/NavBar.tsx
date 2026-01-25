@@ -81,7 +81,9 @@ const NavBar = () => {
             >
               <div className="mb-3">
                 <p className="text-sm text-slate-500">Available credits</p>
-                <p className="text-2xl font-extrabold text-indigo-600">50</p>
+                <p className="text-2xl font-extrabold text-indigo-600">
+                  {user?.credits}
+                </p>
               </div>
 
               <Link href="/upgrade">

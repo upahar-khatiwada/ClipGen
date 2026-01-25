@@ -13,10 +13,13 @@ const createContext = async (opts: { req: Request }) => {
     .find((c) => c.trim().startsWith("accessToken="))
     ?.split("=")[1];
 
+  // console.log("Access Token: ", accessToken);
+
   let user = null;
 
   if (accessToken) {
     const payload = verifyAccessToken(accessToken);
+    // console.log(payload);
     if (payload) {
       user = await prisma.user.findUnique({
         where: { id: payload.userId },
@@ -28,6 +31,8 @@ const createContext = async (opts: { req: Request }) => {
       });
     }
   }
+
+  // console.log("In create context, user: ", user);
 
   return {
     req: opts.req,

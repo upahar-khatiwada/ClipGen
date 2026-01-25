@@ -8,7 +8,12 @@ export const generateVideoRouter = router({
     .input(z.object({ prompt: z.string().min(1).max(500) }))
     .mutation(async ({ ctx, input }) => {
       const { prompt } = input;
-      const userId = ctx.user!.id;
+      const userId = ctx.user?.id;
+
+      if (!userId) {
+        console.error("No user Id in generate_video");
+        return;
+      }
 
       const jobId = `job_${crypto.randomUUID()}`;
 

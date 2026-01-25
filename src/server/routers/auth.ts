@@ -107,7 +107,6 @@ export const authRouter = router({
 
       const accessToken = createAccessToken(existingUser.id);
 
-      // TODO ADD TOKEN IN REDIS HERE
       await ctx.prisma.account.update({
         where: {
           userId: existingUser.id,
@@ -117,6 +116,7 @@ export const authRouter = router({
           },
         },
         data: {
+          access_token: accessToken,
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
           provider: "email",
         },
@@ -213,69 +213,6 @@ export const authRouter = router({
       }
     }),
 
-  // refresh: publicProcedure.mutation(async ({ ctx }) => {
-  //   const cookie = ctx.req.headers.get("cookie") ?? "";
-
-  //   const refreshToken = cookie
-  //     .split(";")
-  //     .find((c) => c.trim().startsWith("refreshToken="))
-  //     ?.split("=")[1];
-
-  //   if (!refreshToken) {
-  //     throw new TRPCError({
-  //       code: "UNAUTHORIZED",
-  //       message: "No refresh token",
-  //     });
-  //   }
-
-  //   const payload = verifyRefreshToken(refreshToken);
-  //   if (!payload) {
-  //     throw new TRPCError({
-  //       code: "UNAUTHORIZED",
-  //       message: "Invalid refresh token",
-  //     });
-  //   }
-
-  //   const userIdFromToken = payload.userId;
-
-  //   const session = await ctx.redis.get(`refresh_token:${refreshToken}`);
-
-  //   if (!session) {
-  //     throw new TRPCError({
-  //       code: "UNAUTHORIZED",
-  //       message: "Refresh token revoked or expired",
-  //     });
-  //   }
-
-  //   const sessionData = JSON.parse(session);
-
-  //   if (sessionData.userId !== userIdFromToken) {
-  //     throw new TRPCError({
-  //       code: "UNAUTHORIZED",
-  //       message: "Refresh token user mismatch",
-  //     });
-  //   }
-
-  //   const accessToken = createAccessToken(userIdFromToken);
-  //   const newRefreshToken = createRefreshToken(userIdFromToken);
-
-  //   await ctx.redis
-  //     .multi()
-  //     .del(`refresh_token:${refreshToken}`)
-  //     .set(
-  //       `refresh_token:${newRefreshToken}`,
-  //       JSON.stringify({ userId: userIdFromToken }),
-  //     )
-  //     .exec();
-
-  //   return {
-  //     status: "success",
-  //     message: "Tokens refreshed",
-  //     accessToken,
-  //     refreshToken: newRefreshToken,
-  //   };
-  // }),
-
   getSession: publicProcedure.query(async ({ ctx }) => {
     const cookie = ctx.req.headers.get("cookie") ?? "";
 
@@ -295,6 +232,7 @@ export const authRouter = router({
         id: true,
         name: true,
         email: true,
+        credits: true,
       },
     });
 

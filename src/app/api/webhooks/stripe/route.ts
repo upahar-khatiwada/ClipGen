@@ -35,11 +35,18 @@ export async function POST(req: NextRequest) {
   const planId = eventObject.metadata?.planId; // only for subscription
   const credits = Number(eventObject.metadata?.credits || 0);
 
+  console.log(
+    `The metadatas here:\n  userId: ${userId} \n creditPackId: ${creditPackId} \n planId: ${planId} \n credits: ${credits}`,
+  );
+
   if (!userId) {
     console.error("Missing userId in metadata!", {
       metadata: eventObject.metadata,
     });
-    return NextResponse.redirect(`${process.env.DOMAIN}/upgrade/failure`);
+    return NextResponse.redirect(
+      new URL(`${process.env.DOMAIN}/upgrade/failure`),
+      req,
+    );
   }
 
   try {

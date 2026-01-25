@@ -7,7 +7,9 @@ type CloudinaryVideoResource = ResourceApiResponse["resources"][number];
 
 export const accountRouter = router({
   getAllVideosOfCurrentUser: privateProcedure.query(async ({ ctx }) => {
-    const userId = ctx.user!.id;
+    const userId = ctx.user?.id;
+
+    // if (!userId) throw new Error("User not authenticated");
 
     const result = await cloudinary.api.resources({
       resource_type: "video",
@@ -18,7 +20,7 @@ export const accountRouter = router({
     });
 
     return result.resources.map((video: CloudinaryVideoResource) => {
-      console.log(video.context);
+      console.log("Cloudinary API CALL LOOOL ", video);
 
       const customContext = video.context as
         | { custom?: { title?: string } }

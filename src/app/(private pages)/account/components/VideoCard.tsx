@@ -2,13 +2,13 @@
 
 import { trpc } from "@/src/app/_trpc/client";
 import Image from "next/image";
-import { useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { Play, Pause, Volume, VolumeX } from "lucide-react";
 
 interface VideoCardProps {
   publicId: string;
   thumbnail: string;
   url?: string;
-  duration?: string | number;
   createdAt?: string;
   title?: string;
 }
@@ -17,13 +17,19 @@ export function VideoCard({
   publicId,
   thumbnail,
   url,
-  duration,
   createdAt,
   title: initialTitle,
 }: VideoCardProps) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(initialTitle || "");
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [showControls, setShowControls] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const controlsTimeout = useRef<NodeJS.Timeout>(null);
+
   const updateTitleMutation = trpc.account.updateVideoTitle.useMutation();
 
   const saveTitle = async () => {
@@ -39,19 +45,102 @@ export function VideoCard({
     }
   };
 
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+      setPlaying(true);
+    } else {
+      videoRef.current.pause();
+      setPlaying(false);
+      setShowControls(false);
+    }
+    showControlsTemporarily();
+  };
+
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    videoRef.current.muted = !videoRef.current.muted;
+    setMuted(videoRef.current.muted);
+  };
+
+  const handleTimeUpdate = () => {
+    if (!videoRef.current) return;
+    const percent =
+      (videoRef.current.currentTime / videoRef.current.duration) * 100;
+    setProgress(percent);
+  };
+
+  const handleProgressClick = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  ) => {
+    if (!videoRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickPos = e.clientX - rect.left;
+    const newTime = (clickPos / rect.width) * videoRef.current.duration;
+    videoRef.current.currentTime = newTime;
+  };
+
+  const showControlsTemporarily = () => {
+    setShowControls(true);
+    if (controlsTimeout.current) clearTimeout(controlsTimeout.current);
+    controlsTimeout.current = setTimeout(() => {
+      setShowControls(false);
+    }, 2000);
+  };
+
   return (
-    <div className="bg-white rounded-3xl shadow-md hover:shadow-xl transition duration-200 overflow-hidden">
+    <div className="bg-white rounded-3xl shadow-md hover:shadow-xl transition duration-200 overflow-hidden group">
       <div
-        className="bg-slate-200 rounded-t-3xl w-full h-120 cursor-pointer relative"
-        onClick={() => setIsPlaying((prev) => !prev)}
+        className="bg-slate-200 rounded-t-3xl w-full h-120  relative overflow-hidden"
+        onMouseMove={showControlsTemporarily}
+        onClick={togglePlay}
       >
-        {isPlaying && url ? (
-          <video
-            src={url}
-            autoPlay
-            controls
-            className="w-full h-full object-cover rounded-t-3xl"
-          />
+        {url ? (
+          <>
+            <video
+              src={url}
+              ref={videoRef}
+              className="w-full h-full object-cover rounded-t-3xl"
+              onTimeUpdate={handleTimeUpdate}
+            />
+
+            {showControls && (
+              <div className="absolute bottom-0 left-0 right-0 p-3 bg-black/30 flex flex-col gap-2 rounded-t-lg transition-opacity duration-300">
+                <div
+                  className="h-1 bg-gray-300 rounded cursor-pointer"
+                  onClick={handleProgressClick}
+                >
+                  <div
+                    className="h-1 bg-purple-600 rounded transition-all duration-200 ease-out"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      togglePlay();
+                    }}
+                    className="text-white p-2 cursor-pointer"
+                  >
+                    {playing ? <Pause size={20} /> : <Play size={20} />}
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleMute();
+                    }}
+                    className="text-white p-2 cursor-pointer"
+                  >
+                    {muted ? <VolumeX size={20} /> : <Volume size={20} />}
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <Image
             src={thumbnail}
@@ -89,7 +178,7 @@ export function VideoCard({
           </div>
         ) : (
           <h3
-            className="font-semibold mb-1"
+            className="font-semibold mb-1 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               setEditing(true);
@@ -100,7 +189,13 @@ export function VideoCard({
         )}
 
         <p className="text-sm text-slate-500">
-          {duration ?? "—"} · {createdAt ?? "—"}
+          {createdAt
+            ? new Date(createdAt).toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            : "—"}
         </p>
       </div>
     </div>

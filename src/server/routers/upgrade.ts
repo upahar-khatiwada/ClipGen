@@ -27,6 +27,7 @@ export const upgradeRouer = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // console.log(`IN UPGRADE.TS LOOOL user: `, ctx.user);
       const creditPack = await ctx.prisma.creditPack.findFirst({
         where: { credits: input.credits, active: true },
       });
@@ -52,6 +53,13 @@ export const upgradeRouer = router({
           userId: ctx.user!.id,
           creditPackId: creditPack.id,
           credits: creditPack.credits,
+        },
+        payment_intent_data: {
+          metadata: {
+            userId: ctx.user!.id,
+            creditPackId: creditPack.id,
+            credits: creditPack.credits,
+          },
         },
       });
 
@@ -88,6 +96,12 @@ export const upgradeRouer = router({
         metadata: {
           userId: ctx.user!.id,
           planId: input.planId,
+        },
+        payment_intent_data: {
+          metadata: {
+            userId: ctx.user!.id,
+            planId: input.planId,
+          },
         },
       });
 
