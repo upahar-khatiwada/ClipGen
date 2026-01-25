@@ -11,8 +11,10 @@ export const generateVideoRouter = router({
       const userId = ctx.user?.id;
 
       if (!userId) {
-        console.error("No user Id in generate_video");
-        return;
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User not authenticated",
+        });
       }
 
       const jobId = `job_${crypto.randomUUID()}`;

@@ -26,6 +26,9 @@ model User {
   verifyToken       String?
   verifyTokenExpiry DateTime?
 
+  resetToken       String?
+  resetTokenExpiry DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -61,7 +64,7 @@ model CreditTransaction {
   type   CreditTransactionType
   reason String?
 
-  stripeSessionId String?
+  stripeSessionId String? @unique
   stripeInvoiceId String?
 
   createdAt DateTime @default(now())

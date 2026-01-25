@@ -5,6 +5,7 @@ import SubscriptionCard from "./components/SubscriptionCard";
 import { trpc } from "../../_trpc/client";
 import CreditPacksSkeleton from "./skeletons/CreditPacksSkeleton";
 import SubscriptionCardSkeleton from "./skeletons/SubscriptionCardSkeleton";
+import { SubscriptionStatus } from "@/src/generated/prisma/enums";
 
 const UpgradePage = () => {
   const [selectedCredits, setSelectedCredits] = useState<number | null>(null);
@@ -13,10 +14,13 @@ const UpgradePage = () => {
   const buyCredits = trpc.upgrade.createCreditCheckout.useMutation();
   const buySubscription = trpc.upgrade.createSubscriptionCheckout.useMutation();
 
-  const [creditPacks, subscriptions] = trpc.useQueries((t) => [
-    t.upgrade.getCreditDetails(),
-    t.upgrade.getSubscriptionDetails(),
-  ]);
+  const [creditPacks, subscriptions, currentUserSubscription] = trpc.useQueries(
+    (t) => [
+      t.upgrade.getCreditDetails(),
+      t.upgrade.getSubscriptionDetails(),
+      t.account.getCurrentSubscription(),
+    ],
+  );
 
   const handleBuyCredits = async () => {
     if (!selectedCredits) return;
@@ -103,17 +107,28 @@ const UpgradePage = () => {
                     description={plan.perks}
                     selected={selectedPlan === plan.id}
                     onSelect={() => setSelectedPlan(plan.id)}
+                    disabled={
+                      currentUserSubscription.data?.status ===
+                      SubscriptionStatus.ACTIVE
+                    }
                   />
                 ))}
           </div>
 
           <div className="mt-6 w-full text-right">
             <button
-              disabled={selectedPlan === null}
+              disabled={
+                selectedPlan === null ||
+                currentUserSubscription.data?.status ===
+                  SubscriptionStatus.ACTIVE
+              }
               onClick={handleBuySubscription}
               className="px-6 py-3 w-full disabled:bg-gray-400 disabled:cursor-not-allowed bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition duration-200 cursor-pointer"
             >
-              Subscribe
+              {currentUserSubscription.data?.status ===
+              SubscriptionStatus.ACTIVE
+                ? "Already Subscribed"
+                : "Subscribe"}
             </button>
           </div>
         </section>

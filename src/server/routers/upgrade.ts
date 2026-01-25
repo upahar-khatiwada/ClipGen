@@ -97,12 +97,6 @@ export const upgradeRouer = router({
           userId: ctx.user!.id,
           planId: input.planId,
         },
-        payment_intent_data: {
-          metadata: {
-            userId: ctx.user!.id,
-            planId: input.planId,
-          },
-        },
       });
 
       return { url: session.url };

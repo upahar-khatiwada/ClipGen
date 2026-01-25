@@ -2,7 +2,7 @@
 
 import { trpc } from "@/src/app/_trpc/client";
 import Image from "next/image";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { Play, Pause, Volume, VolumeX } from "lucide-react";
 
 interface VideoCardProps {

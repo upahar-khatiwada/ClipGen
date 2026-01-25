@@ -5,7 +5,7 @@ import { protectedRouteMiddleware } from "./middlewares/protect_route_middleware
 
 const t = initTRPC.context<Context>().create();
 
-const limit = process.env.NODE_ENV === "development" ? 100 : 50;
+const limit = process.env.NODE_ENV === "development" ? 100 : 67;
 
 export const middleware = t.middleware;
 export const router = t.router;

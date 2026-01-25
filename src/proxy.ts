@@ -4,8 +4,8 @@ import { verifyAccessToken } from "./utils/token_generators";
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (pathname === "/") {
-    NextResponse.redirect(new URL("/login", req.url));
+  if (pathname === "/" || pathname === "") {
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
   const accessToken = req.cookies.get("accessToken")?.value;

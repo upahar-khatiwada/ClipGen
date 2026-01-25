@@ -80,6 +80,8 @@ Requirements:
   const effectiveContentTypeId =
     selectedContent ?? contentTypes.data?.[0]?.id ?? "";
 
+  const effectiveStyleId = selectedStyle ?? styles.data?.[0]?.id ?? "";
+
   const effectiveDurationId = selectedDuration ?? durations.data?.[0]?.id ?? "";
 
   return (
@@ -134,7 +136,7 @@ Requirements:
                     id={style.id}
                     label={style.name}
                     img={style.imageUrl}
-                    selected={selectedStyle === style.id}
+                    selected={effectiveStyleId === style.id}
                     onClick={() => setSelectedStyle(style.id)}
                   />
                 ))}
@@ -166,7 +168,11 @@ Requirements:
 
         <div className="md:ml-auto mt-4">
           <button
-            disabled={!selectedContent || !selectedStyle || !selectedDuration}
+            disabled={
+              !effectiveContentTypeId ||
+              !effectiveStyleId ||
+              !effectiveDurationId
+            }
             onClick={() => {
               const prompt = buildTemplatePrompt();
               generateShortMutation.mutate({ prompt });

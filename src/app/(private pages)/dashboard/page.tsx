@@ -21,6 +21,8 @@ const DashboardPage = () => {
       onError: (err) => {
         if (err.data?.code === "TOO_MANY_REQUESTS") {
           toast.error("You're hitting the rate limit. Please wait a bit!");
+        } else if (err.data?.code === "UNAUTHORIZED") {
+          toast.error("You're not authorized");
         } else {
           toast.error("An error has occured while generating the short!");
         }

@@ -20,7 +20,7 @@ export const accountRouter = router({
     });
 
     return result.resources.map((video: CloudinaryVideoResource) => {
-      console.log("Cloudinary API CALL LOOOL ", video);
+      // console.log("Cloudinary API CALL LOOOL ", video);
 
       const customContext = video.context as
         | { custom?: { title?: string } }
@@ -65,4 +65,21 @@ export const accountRouter = router({
 
       return { success: true, publicId, newTitle };
     }),
+
+  getCurrentSubscription: privateProcedure.query(async ({ ctx }) => {
+    return await ctx.prisma.userSubscription.findUnique({
+      where: { userId: ctx.user?.id },
+      select: {
+        currentPeriodStart: true,
+        currentPeriodEnd: true,
+        status: true,
+        plan: {
+          select: {
+            name: true,
+            interval: true,
+          },
+        },
+      },
+    });
+  }),
 });

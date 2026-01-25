@@ -4,6 +4,7 @@ interface SubscriptionCardProps {
   selected: boolean;
   onSelect: () => void;
   description?: string[];
+  disabled?: boolean;
 }
 
 const SubscriptionCard = ({
@@ -12,6 +13,7 @@ const SubscriptionCard = ({
   selected,
   onSelect,
   description,
+  disabled,
 }: SubscriptionCardProps) => {
   return (
     <div
@@ -32,7 +34,8 @@ const SubscriptionCard = ({
       </div>
       <button
         onClick={onSelect}
-        className={`px-4 py-2 rounded-xl w-full font-semibold transition duration-200 cursor-pointer ${
+        disabled={disabled}
+        className={`px-4 py-2 rounded-xl w-full disabled:cursor-not-allowed disabled:bg-gray-100 font-semibold transition duration-200 cursor-pointer ${
           selected
             ? "bg-indigo-600 text-white hover:bg-indigo-700"
             : "bg-gray-100 text-slate-700 hover:bg-gray-200"
