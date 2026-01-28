@@ -23,6 +23,8 @@ const DashboardPage = () => {
           toast.error("You're hitting the rate limit. Please wait a bit!");
         } else if (err.data?.code === "UNAUTHORIZED") {
           toast.error("You're not authorized");
+        } else if (err.data?.code === "PAYMENT_REQUIRED") {
+          toast.error("You do not have enough credits!");
         } else {
           toast.error("An error has occured while generating the short!");
         }

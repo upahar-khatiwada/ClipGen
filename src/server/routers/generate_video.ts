@@ -5,15 +5,25 @@ import { generateAiShort } from "@/src/controllers/generate_ai_short";
 
 export const generateVideoRouter = router({
   generateShortFromPrompt: privateProcedure
-    .input(z.object({ prompt: z.string().min(1).max(500) }))
+    .input(z.object({ prompt: z.string().min(100).max(500) }))
     .mutation(async ({ ctx, input }) => {
       const { prompt } = input;
       const userId = ctx.user?.id;
 
-      if (!userId) {
+      const user = await ctx.prisma.user.update({
+        where: {
+          id: userId,
+          credits: { gte: 10 },
+        },
+        data: {
+          credits: { decrement: 10 },
+        },
+      });
+
+      if (!user || !userId) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "User not authenticated",
+          code: "PAYMENT_REQUIRED",
+          message: "You do not have enough credits",
         });
       }
 

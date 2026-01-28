@@ -56,6 +56,8 @@ Requirements:
       onError: (err) => {
         if (err.data?.code === "TOO_MANY_REQUESTS") {
           toast.error("You're hitting the rate limit. Please wait a bit!");
+        } else if (err.data?.code === "PAYMENT_REQUIRED") {
+          toast.error("You do not have enough credits!");
         }
       },
     });

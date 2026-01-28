@@ -1,13 +1,8 @@
-// import fs from "fs";
-// import path from "path";
-import { TRPCError } from "@trpc/server";
 import { redis } from "../server/redis";
 import cloudinary from "../services/cloudinary_video_storage";
-// import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
-// const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY! });
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY! });
 
 export async function generateAiShort({
   jobId,
@@ -19,31 +14,28 @@ export async function generateAiShort({
   userId: string;
 }) {
   try {
-    await sleep(5000);
+    const operation = await ai.models.generateVideos({
+      model: "veo-3.1-generate-preview",
+      prompt,
+    });
 
-    const videoUrl = "/videos/video.mp4";
+    let opStatus = operation;
+    while (!opStatus.done) {
+      await new Promise((r) => setTimeout(r, 3000));
+      opStatus = await ai.operations.getVideosOperation({
+        operation: opStatus,
+      });
+    }
 
-    // let operation = await ai.models.generateVideos({
-    //   model: "veo-3.1-generate-preview",
-    //   prompt,
-    // });
+    const videoBase64 =
+      opStatus.response?.generatedVideos?.[0]?.video?.videoBytes;
+    if (!videoBase64) {
+      throw new Error("No video bytes returned from Veo");
+    }
 
-    // while (!operation.done) {
-    //   await new Promise((r) => setTimeout(r, 3000));
-    //   operation = await ai.operations.getVideosOperation({ operation });
-    // }
+    const buffer = Buffer.from(videoBase64, "base64");
 
-    // const videoBase64 =
-    //   operation.response?.generatedVideos?.[0]?.video?.videoBytes;
-
-    // if (!videoBase64) {
-    //   throw new Error("No video bytes returned from Veo");
-    // }
-
-    // const buffer = Buffer.from(videoBase64, "base64");
-
-    const uploadResult = await cloudinary.uploader.upload(
-      "C:/Users/Legion/Desktop/ai-short-generator/public/videos/video.mp4",
+    const stream = cloudinary.uploader.upload_stream(
       {
         resource_type: "video",
         folder: `videos-${userId}`,
@@ -57,62 +49,33 @@ export async function generateAiShort({
           },
         ],
       },
+      async (err, result) => {
+        if (err) throw err;
+
+        const cloudinary_url = result?.secure_url;
+        const thumbnail_url = result?.eager?.[0]?.secure_url;
+
+        await redis.set(
+          `video_job:${jobId}`,
+          JSON.stringify({
+            status: "completed",
+            userId,
+            videoUrl: cloudinary_url,
+            thumbnail_url,
+          }),
+          "EX",
+          60 * 60,
+        );
+      },
     );
 
-    const cloudinary_url = uploadResult.secure_url;
-    const thumbnail_url = uploadResult.eager?.[0].secure_url;
-
-    // const uploadResult = await new Promise((resolve, reject) => {
-    //   cloudinary.uploader
-    //     .upload_stream(
-    //       {
-    //         resource_type: "video",
-    //         folder: "generated-videos",
-    //         public_id: jobId,
-    //       },
-    //       (error, result) => {
-    //         if (error) reject(error);
-    //         else resolve(result);
-    //       },
-    //     )
-    //     .end(buffer);
-    // });
-
-    // const videosDir = path.join(process.cwd(), "public", "videos");
-    // await fs.promises.mkdir(videosDir, { recursive: true });
-
-    // const fileName = `${jobId}.mp4`;
-    // const filePath = path.join(videosDir, fileName);
-    // await fs.promises.writeFile(filePath, buffer);
-
-    // const videoUrl = `/videos/${fileName}`;
-
-    // throw new TRPCError({
-    //   code: "INTERNAL_SERVER_ERROR",
-    //   message: "Simulated backend failure",
-    // });
-
-
-    // TODO SAVE IN DB
-    await redis.set(
-      `video_job:${jobId}`,
-      JSON.stringify({
-        status: "completed",
-        userId,
-        videoUrl: cloudinary_url,
-        thumbnail_url: thumbnail_url,
-      }),
-      "EX",
-      60 * 60,
-    );
+    stream.end(buffer);
   } catch (err) {
     console.error("Veo generation failed:", err);
 
     await redis.set(
       `video_job:${jobId}`,
-      JSON.stringify({
-        status: "failed",
-      }),
+      JSON.stringify({ status: "failed" }),
       "EX",
       60 * 10,
     );
