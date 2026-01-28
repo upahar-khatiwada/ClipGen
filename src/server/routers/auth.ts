@@ -233,6 +233,7 @@ export const authRouter = router({
         name: true,
         email: true,
         credits: true,
+        image: true,
       },
     });
 

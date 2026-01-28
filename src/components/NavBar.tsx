@@ -111,7 +111,17 @@ const NavBar = () => {
               setCreditsOpen(false);
             }}
           >
-            <User />
+            {user?.image ? (
+              <Image
+                width={30}
+                height={30}
+                src={user.image}
+                alt="avatar"
+                className="rounded-full"
+              />
+            ) : (
+              <User />
+            )}
           </button>
 
           <AnimatePresence>

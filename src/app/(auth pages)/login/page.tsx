@@ -1,7 +1,15 @@
+"use client";
+
 import Image from "next/image";
 import LoginForm from "./components/LoginForm";
+import { trpc } from "../../_trpc/client";
 
 const LoginPage = () => {
+  const loginWithGoogleMutation = trpc.oauth.loginWithGoogle.useMutation({
+    onSuccess: (data) => {
+      window.location.href = data.url;
+    },
+  });
   return (
     <div className="w-full max-w-md rounded-xl bg-white shadow-2xl overflow-hidden">
       <div className="px-8 pt-8 text-center">
@@ -12,7 +20,13 @@ const LoginPage = () => {
       </div>
 
       <div className="px-8 pt-6 pb-8">
-        <button className="cursor-pointer flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+        <button
+          onClick={() => {
+            loginWithGoogleMutation.mutate();
+          }}
+          disabled={loginWithGoogleMutation.isPending}
+          className="cursor-pointer flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
           <Image
             src="https://www.svgrepo.com/show/475656/google-color.svg"
             alt="Google"

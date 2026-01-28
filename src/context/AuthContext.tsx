@@ -9,6 +9,7 @@ type User = {
   name: string | null;
   email: string;
   credits?: number;
+  image?: string | null;
 };
 
 type AuthContextType = {
@@ -44,6 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         name: userSessionData.data.name,
         email: userSessionData.data.email,
         credits: userSessionData.data.credits,
+        image: userSessionData.data.image,
       }
     : null;
 
