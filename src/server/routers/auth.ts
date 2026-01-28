@@ -1,5 +1,5 @@
 import z from "zod";
-import { publicProcedure, router } from "../trpc";
+import { privateProcedure, publicProcedure, router } from "../trpc";
 import { comparePassword, hashPassword } from "@/src/utils/password_hasher";
 import {
   createAccessToken,
@@ -8,6 +8,26 @@ import {
 import { cookies } from "next/headers";
 import { sendEmail } from "@/src/services/sendgrid_mailer";
 import { TRPCError } from "@trpc/server";
+import { randomUUID } from "crypto";
+
+function getGoogleAuthUrl() {
+  const state = randomUUID();
+
+  const params = new URLSearchParams({
+    client_id: process.env.GOOGLE_CLIENT_ID!,
+    redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
+    response_type: "code",
+    scope: "openid email profile",
+    state,
+    access_type: "offline",
+    prompt: "consent",
+  });
+
+  return {
+    url: `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
+    state,
+  };
+}
 
 export const authRouter = router({
   signup: publicProcedure
@@ -137,6 +157,34 @@ export const authRouter = router({
         message: "Successfully logged in",
       };
     }),
+
+  loginWithGoogle: publicProcedure.mutation(async ({ ctx }) => {
+    const { url, state } = getGoogleAuthUrl();
+
+    await ctx.redis.set(`oauth:google:${state}`, "valid", "EX", 60 * 5);
+
+    return { url };
+  }),
+
+  logout: privateProcedure.mutation(async ({ ctx }) => {
+    try {
+      await ctx.prisma.account.deleteMany({
+        where: { userId: ctx.user?.id },
+      });
+
+      const cookieStore = await cookies();
+      cookieStore.delete("accessToken");
+
+      return { success: true };
+    } catch (err) {
+      console.error("Error occured while logging out: ", err);
+
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Error while logging out",
+      });
+    }
+  }),
 
   verifyEmail: publicProcedure
     .input(z.object({ token: z.string() }))

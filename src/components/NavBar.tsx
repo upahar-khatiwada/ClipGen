@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
+import { trpc } from "../app/_trpc/client";
+import { toast } from "sonner";
 
 const NavBar = () => {
   const [creditsOpen, setCreditsOpen] = useState<boolean>(false);
@@ -15,6 +17,19 @@ const NavBar = () => {
   const accountRef = useRef<HTMLDivElement>(null);
 
   const { user, isLoading } = useAuth();
+
+  const logoutMutation = trpc.auth.logout.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        window.location.href = "/login";
+      }
+    },
+    onError: (err) => {
+      if (err.data?.code === "INTERNAL_SERVER_ERROR") {
+        toast.error("Error while logging out");
+      }
+    },
+  });
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -152,7 +167,9 @@ const NavBar = () => {
                 </Link>
 
                 <button
-                  onClick={() => {}}
+                  onClick={() => {
+                    logoutMutation.mutate();
+                  }}
                   className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-200 text-red-600 py-2 rounded-lg font-semibold transition-colors duration-200 cursor-pointer"
                 >
                   <LogOut size={18} /> Log Out

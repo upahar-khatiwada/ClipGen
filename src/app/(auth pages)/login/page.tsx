@@ -5,7 +5,7 @@ import LoginForm from "./components/LoginForm";
 import { trpc } from "../../_trpc/client";
 
 const LoginPage = () => {
-  const loginWithGoogleMutation = trpc.oauth.loginWithGoogle.useMutation({
+  const loginWithGoogleMutation = trpc.auth.loginWithGoogle.useMutation({
     onSuccess: (data) => {
       window.location.href = data.url;
     },
