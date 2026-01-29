@@ -12,6 +12,7 @@ ClipGen is an AI-powered shorts video generator that lets users create engaging 
 
 ### Technology Stack
 - **Frontend & Backend**: Built with **Next.js** using **tRPC** for end-to-end type safety.
+- **ORM**: **Prisma** used for type-safe database access and schema management, leveraging ```$transaction``` to enforce **ACID-compliant operations** for reliable payment and subscription handling.
 - **Caching**: Requests are cached for faster performance and reduced load.
 - **Database**: **Neon** is used for consistent storage.
 - **Rate Limiting**: Implemented via **Redis** to limit requests per IP address.
@@ -21,8 +22,7 @@ ClipGen is an AI-powered shorts video generator that lets users create engaging 
 
 ### Media Management
 - **Cloudinary**: Used to store and manage generated short videos.
-- **AI Video Generation**: Attempted integration with **Gemini Veo model**. Currently simulated due to paid API restrictions.
-
+- **AI Video Generation**: Implemented integration with the Gemini Veo model.
 ---
 
 ## Screenshots
