@@ -60,7 +60,7 @@ ClipGen is an AI-powered shorts video generator that lets users create engaging 
 ## Getting Started
 
 ### Prerequisites
-- Bun/Node
+- Bun
 - Redis
 - Database
 - Cloudinary account
@@ -78,7 +78,6 @@ bun install
 Create a .env file with the following variables:
 ```
 DATABASE_URL=<your_neon_database_url>
-REDIS_URL=<your_redis_url>
 JWT_ACCESS_SECRET=<your_jwt_secret_for_session_auth>
 CLOUDINARY_CLOUD_NAME=<your_cloud_name>
 CLOUDINARY_API_KEY=<your_cloudinary_api_key>
@@ -104,5 +103,5 @@ Visit [http://localhost:3000](http://localhost:3000) to see ClipGen in action.
 
 ## Future Improvements
 
-- Full integration of Gemini Veo AI model for automated video generation.
+- Full integration of the Gemini Veo AI model for automated video generation.
 - Enhanced analytics dashboard for monitoring usage and subscriptions.
